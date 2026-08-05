@@ -40,32 +40,30 @@ Then open the URL `vercel dev` prints (usually `http://localhost:3000`).
 ## Testing the menu scraper
 
 `dining.columbia.edu` sits behind a Cloudflare bot-challenge that blocks plain HTTP
-requests, so menus can't be fetched with a simple `fetch()` — see the comment at the
-top of `scripts/scrape-menus.js` for the full explanation. Getting a real scrape
-working is a two-step process:
-
-**Step 1 — see if a real browser gets past the challenge at all:**
+requests, so menus can't be fetched with a simple `fetch()`. `scripts/scrape-menus.js`
+uses Playwright with stealth patches (masking the automation fingerprints Cloudflare's
+Managed Challenge checks for) to get past it, then reads the site's own embedded data:
+every dining.columbia.edu content page ships the day's full menu — every location,
+every meal period, every station and item — as inline JS variables
+(`dining_terms`/`dining_nodes`/`menu_data`) in a `<script>` tag. No CSS selectors or
+clicking through the UI needed; see the comment at the top of that file for details.
 
 ```
 npx playwright install chromium
 npm run scrape:menus:headed
 ```
 
-This opens a visible Chrome window and navigates to the dining menu page. Watch what
-happens — does it load normally, or hang on "Just a moment..."? It saves the result
-to `scripts/scrape-output/page.html` and `page.png` either way. Click around in that
-window to find the actual URL where a day's per-hall, per-meal-period menu lives
-(the default `TARGET_URL` is a best guess), and pass it via:
+This opens a visible Chrome window, navigates to a dining hall page, and prints the
+extracted menus to the terminal. Watch the window — it should load the real page, not
+hang on "Just a moment...". `scripts/scrape-output/page.html`/`page.png` are saved
+either way for debugging. If it's stuck on the challenge, Cloudflare has likely
+changed its detection since this was written; the stealth patches in `main()` are the
+place to revisit.
 
-```
-MENU_URL="https://dining.columbia.edu/whatever-the-real-page-is" npm run scrape:menus:headed
-```
-
-**Step 2 — wire up real extraction:** once you can see real markup in
-`scripts/scrape-output/page.html`, share it (or the selectors you find in DevTools)
-and `extractMenus()` in `scripts/scrape-menus.js` gets filled in to return real data.
-From then on, running the script writes into the Supabase `daily_menus` table, and
-`api/menus.js` reads from it automatically — no frontend changes needed.
+Outside of the fall/spring semester (breaks, summer), dining halls publish nothing,
+so a successful run will correctly print all-empty meal periods — that's expected,
+not a bug. Re-test once dining halls are back in session (check `SEMESTER_START` in
+`config.js`) to confirm real content comes through.
 
 **Production schedule:** `.github/workflows/scrape-menus.yml` runs the scraper twice
 a day via GitHub Actions once this repo is pushed to GitHub, using `SUPABASE_URL` /
