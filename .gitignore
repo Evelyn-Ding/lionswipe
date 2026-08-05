@@ -1,0 +1,20 @@
+# Real Supabase keys/config — never commit this. Copy config.example.js -> config.js locally
+# and on your deploy target instead.
+config.js
+
+# OS/editor cruft
+.DS_Store
+*.swp
+
+# Vercel
+.vercel
+
+# Node
+node_modules/
+
+# Local env vars for `vercel dev` / scraper testing (service role key, etc.)
+.env
+.env.local
+
+# scripts/scrape-menus.js debug dumps (HTML/screenshots of the target page)
+scripts/scrape-output/

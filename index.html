@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LionsFeast</title>
+<style>
+  :root{
+    --navy:#00356B;
+    --columbia-blue:#9CD1E8;
+    --cream:#F6F3EC;
+    --ink:#1B2430;
+    --gold:#C9A24B;
+    --line:#D9D2C2;
+    --card:#FFFFFF;
+    --danger:#B34B3C;
+    --radius:10px;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--cream); color:var(--ink);
+    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+  }
+  .util{font-family:"Helvetica Neue",Arial,sans-serif;}
+  #app{max-width:1100px;margin:0 auto;padding:22px 20px 80px;}
+
+  /* ---- Header ---- */
+  header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid var(--navy);margin-bottom:22px;}
+  .clock{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);opacity:.75;}
+  .clock .time{font-size:20px;font-weight:600;display:block;margin-top:2px;letter-spacing:0;text-transform:none;}
+  .semesterLine{margin-top:8px;font-size:11.5px;color:#7a7568;text-transform:none;letter-spacing:0;}
+  .semesterLine b{color:var(--navy);}
+  .brand{text-align:center;flex:1;}
+  .brand h1{margin:0;font-size:38px;font-weight:400;letter-spacing:.02em;color:var(--navy);}
+  .brand .subtitle{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-top:2px;}
+  .col-motif{display:inline-flex;gap:3px;vertical-align:middle;margin-left:8px;}
+  .col-motif span{display:inline-block;width:3px;height:16px;background:var(--gold);}
+
+  .headerRight{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:10px;min-width:190px;}
+  button{font-family:inherit;cursor:pointer;}
+  .btn{
+    font-family:"Helvetica Neue",Arial,sans-serif;
+    border:1.5px solid var(--navy);background:var(--card);color:var(--navy);
+    padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:600;
+    letter-spacing:.02em; transition:.15s;
+  }
+  .btn:hover{background:var(--navy);color:#fff;}
+  .btn.solid{background:var(--navy);color:#fff;}
+  .btn.solid:hover{background:#00203f;}
+  .swipesBox{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;color:var(--ink);text-align:right;}
+  .swipesLine{padding:1px 0;}
+  .swipesLine span{color:#8a8474;}
+  .swipesLine b{color:var(--navy);font-weight:700;margin-left:5px;}
+  .swipesLine.editable{cursor:pointer;}
+  .swipesLine.editable:hover span, .swipesLine.editable:hover b{text-decoration:underline;}
+
+  /* ---- Meal period tabs ---- */
+  .tabs{display:flex;justify-content:center;gap:10px;margin-bottom:22px;flex-wrap:wrap;}
+  .tab{
+    font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;font-weight:600;
+    padding:8px 20px;border-radius:20px;border:1.5px solid var(--navy);background:transparent;color:var(--navy);
+  }
+  .tab.active{background:var(--navy);color:#fff;}
+
+  /* ---- Dining hall grid ---- */
+  .hallGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:22px;}
+  .hallCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:.15s;position:relative;}
+  .hallCard:hover{border-color:var(--navy);box-shadow:0 3px 10px rgba(0,53,107,.08);}
+  .hallCard.closed{opacity:.55;cursor:default;}
+  .hallCard h3{margin:0 0 2px;font-size:17px;color:var(--navy);}
+  .hallCard .hours{font-family:"Helvetica Neue",Arial,sans-serif;font-size:11px;color:#8a8474;margin-bottom:8px;}
+  .hallCard .stationName{font-family:"Helvetica Neue",Arial,sans-serif;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);margin:8px 0 3px;}
+  .hallCard ul{list-style:none;padding:0;margin:0;font-size:14px;line-height:1.55;}
+  .hallCard .closedTxt{font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;color:#8a8474;}
+
+  /* ---- Not appetizing toggle ---- */
+  .toggleWrap{text-align:center;margin:26px 0;}
+  #notAppBtn{padding:11px 34px;border-radius:24px;font-size:14px;}
+  .toggleSub{font-family:"Helvetica Neue",Arial,sans-serif;font-size:11px;color:#8a8474;margin-top:6px;}
+
+  #searchSection{display:none;}
+  #searchSection.show{display:block;}
+
+  .filters{display:flex;justify-content:center;gap:8px;margin:14px 0;flex-wrap:wrap;}
+  .filterBtn{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;padding:6px 14px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--ink);}
+  .filterBtn.active{background:var(--columbia-blue);border-color:var(--navy);color:var(--navy);font-weight:600;}
+
+  .chatRow{display:flex;gap:8px;align-items:center;background:var(--card);border:1.5px solid var(--navy);border-radius:26px;padding:6px 8px 6px 18px;max-width:640px;margin:0 auto 24px;}
+  .chatRow input{flex:1;border:none;outline:none;font-family:"Helvetica Neue",Arial,sans-serif;font-size:14px;background:transparent;}
+  .chatRow button{background:var(--navy);color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:15px;}
+
+  #results{display:none;flex-direction:column;gap:16px;margin-bottom:20px;}
+  #results.show{display:flex;}
+  .resultCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:flex;gap:14px;cursor:pointer;}
+  .resultCard:hover{border-color:var(--navy);}
+  .resultCard .num{font-size:20px;color:var(--gold);font-weight:600;min-width:24px;}
+  .resultCard h4{margin:0 0 3px;color:var(--navy);font-size:16px;}
+  .resultCard .meta{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;color:#8a8474;margin-bottom:4px;}
+  .resultCard p{margin:0 0 6px;font-size:13.5px;line-height:1.4;}
+  .resultCard .menuItems{list-style:none;padding:0;margin:4px 0 0;font-size:13px;line-height:1.6;}
+  .resultCard .menuItems li:before{content:"— ";color:var(--gold);}
+  .resultCard.cook{background:#FBF7EC;border-color:var(--gold);}
+  .resultCard .price{font-weight:700;color:var(--navy);white-space:nowrap;}
+
+  .loading{text-align:center;font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;color:#8a8474;padding:20px;}
+
+  /* ---- Modal ---- */
+  .overlay{position:fixed;inset:0;background:rgba(0,20,40,.4);display:none;align-items:center;justify-content:center;z-index:50;}
+  .overlay.show{display:flex;}
+  .modal{background:var(--card);border-radius:14px;padding:26px 28px;max-width:340px;width:90%;text-align:center;}
+  .modal h3{margin-top:0;color:var(--navy);}
+  .counter{display:flex;align-items:center;justify-content:center;gap:16px;margin:18px 0;}
+  .counter button{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-size:18px;}
+  .counter .n{font-size:28px;min-width:36px;font-weight:600;color:var(--navy);}
+  .modal input[type=number]{width:100%;padding:10px;font-size:16px;border:1.5px solid var(--line);border-radius:8px;margin:14px 0;font-family:"Helvetica Neue",Arial,sans-serif;}
+  .modal .row{display:flex;gap:8px;justify-content:center;margin-top:10px;}
+  .authField{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:8px;margin-bottom:10px;font-family:"Helvetica Neue",Arial,sans-serif;font-size:14px;}
+  .authSwitch{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;color:var(--navy);cursor:pointer;text-decoration:underline;margin-top:8px;display:inline-block;}
+  .err{color:var(--danger);font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;margin-top:-4px;margin-bottom:8px;}
+  .info{color:#4a7a4a;font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;margin-top:-4px;margin-bottom:8px;}
+
+  /* ---- Breakdown page ---- */
+  #breakdownPage{display:none;}
+  #breakdownPage.show{display:block;}
+  #mainPage.hide{display:none;}
+  .backBtn{margin-bottom:16px;}
+  .statGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:30px;}
+  .statCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;text-align:center;}
+  .statCard .val{font-size:32px;color:var(--navy);font-weight:600;}
+  .statCard .lbl{font-family:"Helvetica Neue",Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#8a8474;margin-top:4px;}
+  .chartBlock{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:22px;}
+  .chartBlock h4{margin:0 0 12px;color:var(--navy);font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.06em;}
+  .scrollBars{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;}
+  .barCol{display:flex;flex-direction:column;align-items:center;min-width:48px;font-family:"Helvetica Neue",Arial,sans-serif;}
+  .barTrack{height:140px;width:26px;display:flex;align-items:flex-end;background:#EFEAE0;border-radius:4px;overflow:hidden;}
+  .bar{width:100%;background:var(--navy);border-radius:4px 4px 0 0;}
+  .bar.target{background:repeating-linear-gradient(45deg,var(--gold),var(--gold) 4px,#fff 4px,#fff 8px);}
+  .barVal{font-size:10.5px;margin-top:4px;color:var(--ink);}
+  .barLbl{font-size:9.5px;color:#8a8474;margin-top:2px;text-align:center;}
+  .pieWrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
+  .legend{font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;}
+  .legend div{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+  .sw{width:12px;height:12px;border-radius:3px;}
+  .configWarning{background:#FDEDEA;border:1px solid var(--danger);color:var(--danger);font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;padding:12px 16px;border-radius:8px;margin-bottom:18px;}
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="configWarning" class="configWarning" style="display:none;"></div>
+
+  <!-- ================= MAIN PAGE ================= -->
+  <div id="mainPage">
+    <header>
+      <div class="clock util">
+        Columbia Time (ET)
+        <span class="time" id="clockTime">--:--</span>
+        <div id="clockDate"></div>
+        <div class="semesterLine">Days until semester end: <b id="semesterDays">--</b></div>
+      </div>
+      <div class="brand">
+        <h1>LionsFeast<span class="col-motif"><span></span><span></span><span></span></span></h1>
+        <div class="subtitle">Let the Lions feast</div>
+      </div>
+      <div class="headerRight">
+        <button class="btn solid util" id="loginBtn">Log In</button>
+        <div class="swipesBox" id="swipesSummary"></div>
+        <button class="btn util" id="breakdownBtn">See Breakdown &rarr;</button>
+      </div>
+    </header>
+
+    <div class="tabs util" id="mealTabs"></div>
+
+    <div class="hallGrid" id="hallGrid"></div>
+
+    <div class="toggleWrap">
+      <button class="btn solid" id="notAppBtn">Not Appetizing?</button>
+      <div class="toggleSub">Click here for more options</div>
+    </div>
+
+    <div id="searchSection">
+      <div class="filters" id="filters">
+        <button class="filterBtn" data-f="u20">Under $20</button>
+        <button class="filterBtn" data-f="u30">Under $30</button>
+        <button class="filterBtn" data-f="w5">&lt;5 min walk</button>
+        <button class="filterBtn" data-f="w10">&lt;10 min walk</button>
+      </div>
+      <div class="chatRow util">
+        <input id="chatInput" placeholder="What do you feel like eating? Enter cravings, meal ideas, or just vibes...">
+        <button id="sendBtn">&#10148;</button>
+      </div>
+      <div class="loading" id="loadingMsg" style="display:none;">Asking around campus...</div>
+      <div id="results"></div>
+    </div>
+  </div>
+
+  <!-- ================= BREAKDOWN PAGE ================= -->
+  <div id="breakdownPage">
+    <button class="btn backBtn util" id="backBtn">&larr; Back to Lion Mart</button>
+    <h2 style="color:var(--navy);font-weight:400;">Your Breakdown</h2>
+    <div class="statGrid" id="statGrid"></div>
+    <div class="chartBlock">
+      <h4>Meal Swipes Used / Week &mdash; scroll for history &amp; target pace</h4>
+      <div class="scrollBars" id="swipeChart"></div>
+    </div>
+    <div class="chartBlock">
+      <h4>Money Spent / Week &mdash; scroll for history</h4>
+      <div class="scrollBars" id="moneyChart"></div>
+    </div>
+    <div class="chartBlock">
+      <h4>Dining Hall vs. Eating Out</h4>
+      <div class="pieWrap">
+        <svg id="pieSvg" width="160" height="160" viewBox="0 0 160 160"></svg>
+        <div class="legend" id="pieLegend"></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===== Overlays ===== -->
+<div class="overlay" id="loginOverlay">
+  <div class="modal util">
+    <h3 id="authTitle">Log In</h3>
+    <input class="authField" id="authEmail" placeholder="uni@columbia.edu">
+    <input class="authField" id="authPass" type="password" placeholder="Password">
+    <div class="err" id="authErr" style="display:none;"></div>
+    <div class="info" id="authInfo" style="display:none;"></div>
+    <button class="btn solid" id="authSubmit" style="width:100%;">Log In</button>
+    <span class="authSwitch" id="authSwitch">Don't have an account? Sign up</span>
+    <div style="margin-top:14px;"><button class="btn" id="authCancel">Cancel</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="swipeOverlay">
+  <div class="modal">
+    <h3 id="swipeHallName">Ferris</h3>
+    <p class="util" style="font-size:13px;color:#8a8474;">Count this as a meal swipe</p>
+    <div class="counter">
+      <button id="swipeMinus">&minus;</button>
+      <div class="n" id="swipeCount">1</div>
+      <button id="swipePlus">+</button>
+    </div>
+    <div class="row">
+      <button class="btn solid" id="swipeConfirm">Log Swipe</button>
+      <button class="btn" id="swipeCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="spendOverlay">
+  <div class="modal">
+    <h3 id="spendPlaceName">Chipotle</h3>
+    <p class="util" style="font-size:13px;color:#8a8474;">How much did you spend?</p>
+    <input type="number" id="spendAmount" placeholder="$0.00" step="0.01">
+    <div class="row">
+      <button class="btn solid" id="spendConfirm">Log Meal</button>
+      <button class="btn" id="spendCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="planOverlay">
+  <div class="modal util" style="max-width:380px;">
+    <h3 id="planTitle">Set Up Your Dining Plan</h3>
+    <p style="font-size:13px;color:#8a8474;">This helps track your swipes and pace for the rest of the semester. See <a href="https://dining.columbia.edu/student-dining-plans" target="_blank" rel="noopener">dining.columbia.edu/student-dining-plans</a> for current plan details.</p>
+    <div class="info" id="planRolloverNote" style="display:none;"></div>
+
+    <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Plan name (optional)</label>
+    <input class="authField" id="planName" placeholder="e.g. Plan B">
+
+    <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Total swipes for the semester</label>
+    <input class="authField" id="planTotalSwipes" type="number" min="0" placeholder="e.g. 175">
+
+    <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Swipes per week (target pace)</label>
+    <input class="authField" id="planWeeklyAllowance" type="number" min="0" placeholder="e.g. 14">
+    <p style="font-size:11px;color:#8a8474;text-align:left;margin-top:-4px;">Only know one? Fill in whichever you have — the other can stay a rough estimate and you can edit it later by clicking "Swipes left" in the header.</p>
+
+    <div class="err" id="planErr" style="display:none;"></div>
+    <button class="btn solid" id="planSubmit" style="width:100%;">Save Dining Plan</button>
+    <div style="margin-top:14px;" id="planCancelWrap"><button class="btn" id="planCancel">Cancel</button></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<script src="config.js"></script>
+<script>
+(async function(){
+
+/* ---------------- Supabase setup ---------------- */
+const CFG = window.LION_MART_CONFIG || {};
+let supabase = null;
+const cfgWarn = document.getElementById('configWarning');
+if(!CFG.SUPABASE_URL || CFG.SUPABASE_URL.includes('YOUR-PROJECT-REF')){
+  cfgWarn.style.display = 'block';
+  cfgWarn.textContent = 'Supabase isn\'t configured yet — edit config.js with your project URL and anon key (see README.md). Login/logging will not work until then.';
+} else {
+  supabase = window.supabase.createClient(CFG.SUPABASE_URL, CFG.SUPABASE_ANON_KEY);
+}
+
+const SEMESTER_END = CFG.SEMESTER_END ? new Date(CFG.SEMESTER_END) : new Date('2026-12-15T23:59:59-05:00');
+const SEMESTER_START = CFG.SEMESTER_START ? new Date(CFG.SEMESTER_START) : new Date('2026-09-02T00:00:00-04:00');
+// 'fall' or 'spring' — set in config.js each term. Drives end-of-semester swipe rollover:
+// unused Fall swipes carry into Spring; Spring->Fall just prompts a plan review, no rollover.
+const SEMESTER_TYPE = CFG.SEMESTER_TYPE === 'spring' ? 'spring' : 'fall';
+// No made-up fallback numbers here — until a user saves a real dining plan (see the
+// mandatory setup modal), swipe-dependent stats show "—" instead of a guessed value.
+
+let currentUser = null;   // supabase auth user
+let logs = [];            // rows from meal_logs for the current user
+let userPlan = null;      // { total_swipes, weekly_allowance } from meal_plans, or null until set
+
+/* ---------------- Date/time (Columbia = America/New_York) ---------------- */
+function tick(){
+  const now = new Date();
+  const timeFmt = new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',hour:'2-digit',minute:'2-digit'});
+  const dateFmt = new Intl.DateTimeFormat('en-US',{timeZone:'America/New_York',weekday:'short',month:'short',day:'numeric'});
+  document.getElementById('clockTime').textContent = timeFmt.format(now);
+  document.getElementById('clockDate').textContent = dateFmt.format(now);
+  const daysLeft = Math.max(0, Math.ceil((SEMESTER_END - now) / (24*3600*1000)));
+  document.getElementById('semesterDays').textContent = daysLeft;
+}
+tick(); setInterval(tick,15000);
+
+/* ---------------- Menu data ----------------
+   Fetched from /api/menus (a Vercel serverless function). NOTE: dining.columbia.edu
+   sits behind a Cloudflare JS challenge that blocks plain server-side fetches, so
+   /api/menus currently serves curated sample data mirroring the site's structure
+   rather than a live scrape — see api/menus.js for how to swap in a real source
+   (e.g. a headless-browser scraping service) without touching this file. */
+let MENUS = null;
+let currentMeal = "Dinner";
+async function loadMenus(){
+  hallGrid.innerHTML = `<div class="loading">Loading today's menus...</div>`;
+  try{
+    const resp = await fetch('/api/menus');
+    MENUS = await resp.json();
+  }catch(e){
+    MENUS = { Breakfast:{}, Lunch:{}, Dinner:{}, "Late Night":{} };
+  }
+  renderHalls();
+}
+
+/* ---------------- Meal Tabs ---------------- */
+const tabsEl = document.getElementById('mealTabs');
+["Breakfast","Lunch","Dinner","Late Night"].forEach(m=>{
+  const b = document.createElement('button');
+  b.className = 'tab' + (m===currentMeal?' active':'');
+  b.textContent = m;
+  b.onclick = ()=>{ currentMeal = m; renderTabs(); renderHalls(); };
+  tabsEl.appendChild(b);
+});
+function renderTabs(){
+  [...tabsEl.children].forEach(c=> c.classList.toggle('active', c.textContent===currentMeal));
+}
+
+/* ---------------- Dining Halls ---------------- */
+const hallGrid = document.getElementById('hallGrid');
+function renderHalls(){
+  if(!MENUS) return;
+  hallGrid.innerHTML = '';
+  const data = MENUS[currentMeal] || {};
+  Object.keys(data).forEach(hall=>{
+    const info = data[hall];
+    const card = document.createElement('div');
+    card.className = 'hallCard' + (info.closed ? ' closed' : '');
+    if(info.closed){
+      card.innerHTML = `<h3>${hall}</h3><div class="closedTxt">Closed for ${currentMeal.toLowerCase()}</div>`;
+    } else {
+      let stationsHtml = info.stations.map(s=>`
+        <div class="stationName">${s.name}</div>
+        <ul>${s.items.map(i=>`<li>${i}</li>`).join('')}</ul>
+      `).join('');
+      card.innerHTML = `<h3>${hall}</h3><div class="hours util">${info.hours}</div>${stationsHtml}`;
+      card.onclick = ()=> openSwipeModal(hall);
+    }
+    hallGrid.appendChild(card);
+  });
+}
+
+/* ---------------- Not Appetizing toggle ---------------- */
+const searchSection = document.getElementById('searchSection');
+document.getElementById('notAppBtn').onclick = ()=>{
+  searchSection.classList.toggle('show');
+};
+
+/* ---------------- Filters ---------------- */
+const activeFilters = new Set();
+document.querySelectorAll('.filterBtn').forEach(btn=>{
+  btn.onclick = ()=>{
+    btn.classList.toggle('active');
+    const f = btn.dataset.f;
+    activeFilters.has(f) ? activeFilters.delete(f) : activeFilters.add(f);
+  };
+});
+
+/* ---------------- Grocery reference prices ----------------
+   Westside Market and Morton Williams don't expose a public price API and (like
+   dining.columbia.edu) sit behind bot protection that blocks a plain server-side
+   fetch, so these are manually curated sample prices near their real shelf prices.
+   Update this list by hand as prices drift, or wire it through /api/menus-style
+   endpoint if a scraping proxy becomes available. ---------------- */
+const GROCERY = [
+  {store:"Westside Market", item:"Boneless Chicken Breast (1lb)", price:5.99},
+  {store:"Westside Market", item:"Jasmine Rice (2lb)", price:4.49},
+  {store:"Morton Williams", item:"Corn Tortillas (12ct)", price:2.99},
+  {store:"Morton Williams", item:"Mixed Salad Greens", price:3.49},
+  {store:"Westside Market", item:"Eggs (dozen)", price:4.29},
+  {store:"Morton Williams", item:"Salsa", price:3.99}
+];
+function cookYourOwnCard(){
+  const picks = [...GROCERY].sort(()=>0.5-Math.random()).slice(0,3);
+  const total = picks.reduce((s,p)=>s+p.price,0).toFixed(2);
+  return {
+    isCook:true,
+    name:"Cook Your Own!",
+    meta:"Shopping list · Westside Market / Morton Williams",
+    items: picks.map(p=>`${p.item} — $${p.price.toFixed(2)} (${p.store})`),
+    price:`$${total}`
+  };
+}
+
+/* ---------------- Claude API search ---------------- */
+const resultsEl = document.getElementById('results');
+const loadingMsg = document.getElementById('loadingMsg');
+document.getElementById('sendBtn').onclick = runSearch;
+document.getElementById('chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter') runSearch(); });
+
+async function runSearch(){
+  const query = document.getElementById('chatInput').value.trim();
+  if(!query) return;
+  resultsEl.classList.add('show');
+  resultsEl.innerHTML = '';
+  loadingMsg.style.display = 'block';
+
+  let filterText = [];
+  if(activeFilters.has('u20')) filterText.push('under $20 per person');
+  if(activeFilters.has('u30')) filterText.push('under $30 per person');
+  if(activeFilters.has('w5')) filterText.push('less than a 5 minute walk from Columbia University (116th & Broadway)');
+  if(activeFilters.has('w10')) filterText.push('less than a 10 minute walk from Columbia University (116th & Broadway)');
+
+  const prompt = `A Columbia University student near 116th St & Broadway, NYC wants food. They said: "${query}".
+${filterText.length ? 'Constraints: ' + filterText.join(', ') + '.' : ''}
+Give me 3-4 real, plausible nearby restaurant/food options (Morningside Heights / Harlem area). For each, include 2-3 specific popular menu items with individual prices. Respond ONLY with raw JSON, no markdown fences, in this exact shape:
+[{"name":"...", "walk":"N min walk", "note":"one short sentence", "menu_items":[{"item":"...", "price":"$X"}, {"item":"...", "price":"$X"}]}]`;
+
+  try{
+    const resp = await fetch("/api/search", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ prompt })
+    });
+    const data = await resp.json();
+    const clean = (data.text||'').replace(/```json|```/g,'').trim();
+    let places = [];
+    try{ places = JSON.parse(clean); }catch(e){ places = []; }
+
+    loadingMsg.style.display = 'none';
+    resultsEl.innerHTML = '';
+    places.forEach((p,i)=>{
+      const card = document.createElement('div');
+      card.className = 'resultCard';
+      const itemsHtml = (p.menu_items||[]).map(mi=>`<li>${mi.item} — <b>${mi.price}</b></li>`).join('');
+      card.innerHTML = `<div class="num">${i+1}.</div>
+        <div style="flex:1;">
+          <h4>${p.name}</h4>
+          <div class="meta util">${p.walk||''}</div>
+          <p>${p.note||''}</p>
+          <ul class="menuItems util">${itemsHtml}</ul>
+        </div>`;
+      card.onclick = ()=> openSpendModal(p.name);
+      resultsEl.appendChild(card);
+    });
+    // Always append Cook Your Own
+    const cy = cookYourOwnCard();
+    const cyEl = document.createElement('div');
+    cyEl.className = 'resultCard cook';
+    cyEl.innerHTML = `<div class="num">${places.length+1}.</div>
+      <div style="flex:1;">
+        <h4>${cy.name}</h4>
+        <div class="meta util">${cy.meta}</div>
+        <ul class="menuItems util">${cy.items.map(i=>`<li>${i}</li>`).join('')}</ul>
+      </div>
+      <div class="price">${cy.price}</div>`;
+    cyEl.onclick = ()=> openSpendModal(cy.name);
+    resultsEl.appendChild(cyEl);
+
+  }catch(e){
+    loadingMsg.style.display='none';
+    resultsEl.innerHTML = `<div class="loading">Couldn't reach the search right now. Try again in a moment.</div>`;
+  }
+}
+
+/* ---------------- Swipe modal ---------------- */
+let swipeHall = null, swipeCount = 1;
+const swipeOverlay = document.getElementById('swipeOverlay');
+function openSwipeModal(hall){
+  if(!requireLogin()) return;
+  swipeHall = hall; swipeCount = 1;
+  document.getElementById('swipeHallName').textContent = hall;
+  document.getElementById('swipeCount').textContent = swipeCount;
+  swipeOverlay.classList.add('show');
+}
+document.getElementById('swipeMinus').onclick = ()=>{ swipeCount = Math.max(1, swipeCount-1); document.getElementById('swipeCount').textContent = swipeCount; };
+document.getElementById('swipePlus').onclick = ()=>{ swipeCount++; document.getElementById('swipeCount').textContent = swipeCount; };
+document.getElementById('swipeCancel').onclick = ()=> swipeOverlay.classList.remove('show');
+document.getElementById('swipeConfirm').onclick = async ()=>{
+  await insertLog({ type:'hall', name:swipeHall, swipes:swipeCount, ts:new Date().toISOString() });
+  swipeOverlay.classList.remove('show');
+};
+
+/* ---------------- Spend modal ---------------- */
+let spendPlace = null;
+const spendOverlay = document.getElementById('spendOverlay');
+function openSpendModal(name){
+  if(!requireLogin()) return;
+  spendPlace = name;
+  document.getElementById('spendPlaceName').textContent = name;
+  document.getElementById('spendAmount').value = '';
+  spendOverlay.classList.add('show');
+}
+document.getElementById('spendCancel').onclick = ()=> spendOverlay.classList.remove('show');
+document.getElementById('spendConfirm').onclick = async ()=>{
+  const amt = parseFloat(document.getElementById('spendAmount').value);
+  if(isNaN(amt) || amt<0) return;
+  await insertLog({ type:'out', name:spendPlace, amount:amt, ts:new Date().toISOString() });
+  spendOverlay.classList.remove('show');
+};
+
+function requireLogin(){
+  if(!currentUser){
+    alert('Log in with your Columbia email to log meals.');
+    return false;
+  }
+  return true;
+}
+
+/* ---------------- Supabase: logs & dining plan ---------------- */
+async function insertLog(entry){
+  if(!supabase || !currentUser) return;
+  const row = { user_id: currentUser.id, ts: entry.ts, type: entry.type, name: entry.name,
+                swipes: entry.swipes || null, amount: entry.amount || null };
+  const { error } = await supabase.from('meal_logs').insert(row);
+  if(error){ console.error(error); alert('Could not save that — check your Supabase setup.'); return; }
+  await refreshLogs();
+}
+async function refreshLogs(){
+  if(!supabase || !currentUser){ logs = []; updateSwipesSummary(); return; }
+  const { data, error } = await supabase.from('meal_logs').select('*').eq('user_id', currentUser.id).order('ts', {ascending:true});
+  if(error){ console.error(error); return; }
+  logs = (data||[]).map(r=>({ ts: new Date(r.ts).getTime(), type:r.type, name:r.name, swipes:r.swipes, amount:r.amount }));
+  updateSwipesSummary();
+}
+
+async function loadOrPromptPlan(){
+  if(!supabase || !currentUser){ userPlan = null; return; }
+  const { data, error } = await supabase.from('meal_plans').select('*').eq('user_id', currentUser.id).maybeSingle();
+  if(error){ console.error(error); }
+  if(data){
+    userPlan = { total_swipes: data.total_swipes, weekly_allowance: data.weekly_allowance,
+                 plan_name: data.plan_name || '', semester_start: data.semester_start, semester_type: data.semester_type };
+    updateSwipesSummary();
+
+    // End-of-semester check: if this plan was saved for an earlier term than the one
+    // config.js currently points at, that term has ended — roll Fall swipes into Spring
+    // (per Columbia's own rollover policy) and prompt a plan review either way.
+    const storedStart = data.semester_start ? new Date(data.semester_start).getTime() : null;
+    if(storedStart && storedStart !== SEMESTER_START.getTime()){
+      let leftover = 0;
+      if(data.semester_type === 'fall'){
+        const usedPrevSemester = logs.filter(l=> l.type==='hall' && l.ts>=storedStart && l.ts<SEMESTER_START.getTime())
+                                      .reduce((s,l)=>s+l.swipes,0);
+        leftover = Math.max(0, data.total_swipes - usedPrevSemester);
+      }
+      openPlanModal({ mandatory:false, rollover:true, prevType:data.semester_type, leftover });
+    }
+  } else {
+    userPlan = null;
+    openPlanModal({ mandatory:true });
+  }
+}
+async function savePlan(totalSwipes, weeklyAllowance, planName){
+  if(!supabase || !currentUser) return false;
+  const { error } = await supabase.from('meal_plans').upsert({
+    user_id: currentUser.id, total_swipes: totalSwipes, weekly_allowance: weeklyAllowance,
+    plan_name: planName || null, semester_start: SEMESTER_START.toISOString(), semester_type: SEMESTER_TYPE,
+    updated_at: new Date().toISOString()
+  });
+  if(error){ console.error(error); return false; }
+  userPlan = { total_swipes: totalSwipes, weekly_allowance: weeklyAllowance, plan_name: planName || '',
+               semester_start: SEMESTER_START.toISOString(), semester_type: SEMESTER_TYPE };
+  updateSwipesSummary();
+  return true;
+}
+
+/* ---------------- Dining plan modal ---------------- */
+const planOverlay = document.getElementById('planOverlay');
+function openPlanModal({mandatory=false, rollover=false, prevType=null, leftover=0}={}){
+  document.getElementById('planTitle').textContent = mandatory ? 'Set Up Your Dining Plan' : (rollover ? 'New Semester — Review Your Plan' : 'Edit Your Dining Plan');
+  document.getElementById('planName').value = userPlan ? (userPlan.plan_name || '') : '';
+
+  const noteEl = document.getElementById('planRolloverNote');
+  if(rollover && prevType === 'fall' && leftover > 0){
+    noteEl.style.display = 'block';
+    noteEl.textContent = `Your Fall semester ended with ${leftover} unused swipe${leftover===1?'':'s'} — we've pre-filled the total below with just that carryover. Add your new Spring semester's allocation on top (check dining.columbia.edu/student-dining-plans) before saving.`;
+  } else if(rollover){
+    noteEl.style.display = 'block';
+    noteEl.textContent = `A new semester has started — please review and update your dining plan.`;
+  } else {
+    noteEl.style.display = 'none';
+  }
+
+  // Rollover pre-fills only the real carryover number (never a guessed baseline);
+  // editing an existing plan prefills the user's real saved values; first-time setup
+  // starts blank so nothing invented ever gets saved as if it were real.
+  const totalVal = rollover ? (leftover > 0 ? leftover : '') : (userPlan ? userPlan.total_swipes : '');
+  const weeklyVal = rollover ? '' : (userPlan ? userPlan.weekly_allowance : '');
+  document.getElementById('planTotalSwipes').value = totalVal;
+  document.getElementById('planWeeklyAllowance').value = weeklyVal;
+  document.getElementById('planErr').style.display = 'none';
+  document.getElementById('planCancelWrap').style.display = mandatory ? 'none' : 'block';
+  planOverlay.classList.add('show');
+}
+document.getElementById('planCancel').onclick = ()=> planOverlay.classList.remove('show');
+document.getElementById('planSubmit').onclick = async ()=>{
+  const planName = document.getElementById('planName').value.trim();
+  const total = parseInt(document.getElementById('planTotalSwipes').value, 10);
+  const weekly = parseInt(document.getElementById('planWeeklyAllowance').value, 10);
+  const errEl = document.getElementById('planErr');
+  if(isNaN(total) || total < 0 || isNaN(weekly) || weekly < 0){
+    errEl.textContent = 'Please enter valid numbers for total swipes and swipes/week (plan name is optional).';
+    errEl.style.display = 'block';
+    return;
+  }
+  const ok = await savePlan(total, weekly, planName);
+  if(!ok){ errEl.textContent = 'Could not save your plan — try again.'; errEl.style.display='block'; return; }
+  planOverlay.classList.remove('show');
+};
+
+/* ---------------- Login / Signup (Supabase Auth) ---------------- */
+let authMode = 'login';
+const loginOverlay = document.getElementById('loginOverlay');
+document.getElementById('loginBtn').onclick = async ()=>{
+  if(!supabase){ alert('Supabase is not configured yet (see config.js / README.md).'); return; }
+  if(currentUser){
+    await supabase.auth.signOut();
+    return;
+  }
+  authMode='login'; renderAuth(); loginOverlay.classList.add('show');
+};
+document.getElementById('authCancel').onclick = ()=> loginOverlay.classList.remove('show');
+document.getElementById('authSwitch').onclick = ()=>{
+  authMode = authMode==='login' ? 'signup' : 'login';
+  renderAuth();
+};
+function renderAuth(){
+  document.getElementById('authTitle').textContent = authMode==='login' ? 'Log In' : 'Sign Up';
+  document.getElementById('authSubmit').textContent = authMode==='login' ? 'Log In' : 'Sign Up';
+  document.getElementById('authSwitch').textContent = authMode==='login' ? "Don't have an account? Sign up" : "Already have an account? Log in";
+  document.getElementById('authErr').style.display='none';
+  document.getElementById('authInfo').style.display='none';
+}
+document.getElementById('authSubmit').onclick = async ()=>{
+  const email = document.getElementById('authEmail').value.trim().toLowerCase();
+  const pass = document.getElementById('authPass').value;
+  const errEl = document.getElementById('authErr');
+  const infoEl = document.getElementById('authInfo');
+  errEl.style.display='none'; infoEl.style.display='none';
+
+  if(!/@columbia\.edu$/.test(email)){
+    errEl.textContent = 'Please use your Columbia email (@columbia.edu).';
+    errEl.style.display='block'; return;
+  }
+  if(!pass){ errEl.textContent='Password required.'; errEl.style.display='block'; return; }
+
+  if(authMode==='signup'){
+    const { data, error } = await supabase.auth.signUp({ email, password: pass });
+    if(error){ errEl.textContent = error.message; errEl.style.display='block'; return; }
+    if(data.user && !data.session){
+      infoEl.textContent = 'Check your Columbia email to confirm your account, then log in.';
+      infoEl.style.display='block';
+      return;
+    }
+  } else {
+    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    if(error){ errEl.textContent = error.message; errEl.style.display='block'; return; }
+  }
+  loginOverlay.classList.remove('show');
+};
+
+if(supabase){
+  supabase.auth.onAuthStateChange(async (_event, session)=>{
+    currentUser = session ? session.user : null;
+    updateLoginBtn();
+    await refreshLogs();   // logs must be loaded before loadOrPromptPlan so rollover leftover-swipe math is correct
+    loadOrPromptPlan();
+  });
+  supabase.auth.getSession().then(async ({data})=>{
+    currentUser = data.session ? data.session.user : null;
+    updateLoginBtn();
+    await refreshLogs();
+    loadOrPromptPlan();
+  });
+}
+
+function updateLoginBtn(){
+  document.getElementById('loginBtn').textContent = currentUser ? currentUser.email.split('@')[0] + ' — Log Out' : 'Log In';
+}
+
+/* ---------------- Swipes summary (header, plain text) ---------------- */
+function updateSwipesSummary(){
+  const usedSemester = logs.filter(l=>l.type==='hall' && l.ts >= SEMESTER_START.getTime()).reduce((s,l)=>s+l.swipes,0);
+  const weekLogs = logsThisPeriod('week');
+  const weekSwipesUsed = weekLogs.filter(l=>l.type==='hall').reduce((s,l)=>s+l.swipes,0);
+  const spentOutWeek = weekLogs.filter(l=>l.type==='out').reduce((s,l)=>s+l.amount,0);
+
+  // "Swipes/week left" and "Swipes left" depend on a real saved plan (total_swipes /
+  // weekly_allowance) — show "—" rather than inventing a number when there isn't one yet.
+  const weekLeft = userPlan ? Math.max(0, userPlan.weekly_allowance - weekSwipesUsed) : '—';
+  const left = userPlan ? Math.max(0, userPlan.total_swipes - usedSemester) : '—';
+
+  document.getElementById('swipesSummary').innerHTML = `
+    <div class="swipesLine"><span>Swipes used:</span><b>${usedSemester}</b></div>
+    <div class="swipesLine"><span>Swipes/week left:</span><b>${weekLeft}</b></div>
+    <div class="swipesLine editable" id="swipesLeftLine" title="Click to edit your dining plan"><span>Swipes left:</span><b>${left}</b></div>
+    <div class="swipesLine"><span>Total spent eating out this week:</span><b>$${spentOutWeek.toFixed(2)}</b></div>
+  `;
+  const slLine = document.getElementById('swipesLeftLine');
+  if(slLine){
+    slLine.onclick = ()=>{
+      if(!currentUser){ alert('Log in to set up your dining plan.'); return; }
+      openPlanModal({ mandatory:false });
+    };
+  }
+}
+
+/* ---------------- Breakdown page ---------------- */
+document.getElementById('breakdownBtn').onclick = ()=>{
+  if(!currentUser){
+    alert('Log in to see your breakdown.');
+    return;
+  }
+  document.getElementById('mainPage').classList.add('hide');
+  document.getElementById('breakdownPage').classList.add('show');
+  renderBreakdown();
+};
+document.getElementById('backBtn').onclick = ()=>{
+  document.getElementById('breakdownPage').classList.remove('show');
+  document.getElementById('mainPage').classList.remove('hide');
+};
+
+function startOfWeek(d){
+  const dt = new Date(d);
+  const day = dt.getDay(); // 0 sun
+  const diff = (day===0?-6:1) - day; // move to Monday
+  dt.setDate(dt.getDate()+diff);
+  dt.setHours(0,0,0,0);
+  return dt;
+}
+function weekKey(ts){ return startOfWeek(ts).getTime(); }
+function logsThisPeriod(period){
+  const now = Date.now();
+  const cutoff = period==='week' ? startOfWeek(now).getTime() : (function(){const d=new Date();d.setDate(1);d.setHours(0,0,0,0);return d.getTime();})();
+  return logs.filter(l=>l.ts>=cutoff);
+}
+
+function renderBreakdown(){
+  const now = Date.now();
+  const weekLogs = logsThisPeriod('week');
+  const monthLogs = logsThisPeriod('month');
+  const usedSemester = logs.filter(l=>l.type==='hall' && l.ts >= SEMESTER_START.getTime()).reduce((s,l)=>s+l.swipes,0);
+  const swipesLeft = userPlan ? Math.max(0, userPlan.total_swipes - usedSemester) : null;
+  const spentWeek = weekLogs.filter(l=>l.type==='out').reduce((s,l)=>s+l.amount,0);
+  const spentMonth = monthLogs.filter(l=>l.type==='out').reduce((s,l)=>s+l.amount,0);
+
+  document.getElementById('statGrid').innerHTML = `
+    ${statCard(usedSemester,'Swipes Used')}
+    ${statCard(swipesLeft===null?'—':swipesLeft,'Swipes Left')}
+    ${statCard('$'+spentWeek.toFixed(2),'Spent This Week')}
+    ${statCard('$'+spentMonth.toFixed(2),'Spent This Month')}
+  `;
+
+  const weeks = {};
+  logs.forEach(l=>{
+    const wk = weekKey(l.ts);
+    if(!weeks[wk]) weeks[wk] = {swipes:0, money:0};
+    if(l.type==='hall') weeks[wk].swipes += l.swipes;
+    if(l.type==='out') weeks[wk].money += l.amount;
+  });
+  const thisWeekStart = startOfWeek(now).getTime();
+  const weekMs = 7*24*3600*1000;
+  const historyWeeks = 8;
+  const futureWeeks = 4;
+  let weekArr = [];
+  for(let i=historyWeeks-1;i>=0;i--){
+    const wk = thisWeekStart - i*weekMs;
+    weekArr.push({wk, ...(weeks[wk]||{swipes:0,money:0}), future:false});
+  }
+  const remainingSwipes = swipesLeft || 0;
+  const targetPerWeek = Math.max(1, Math.round(remainingSwipes / (futureWeeks+1)));
+  for(let i=1;i<=futureWeeks;i++){
+    const wk = thisWeekStart + i*weekMs;
+    weekArr.push({wk, swipes:targetPerWeek, money:0, future:true});
+  }
+
+  const maxSwipe = Math.max(...weekArr.map(w=>w.swipes),1);
+  const swipeChart = document.getElementById('swipeChart');
+  swipeChart.innerHTML = '';
+  weekArr.forEach(w=>{
+    const col = document.createElement('div'); col.className='barCol';
+    const h = Math.round((w.swipes/maxSwipe)*130);
+    col.innerHTML = `<div class="barTrack"><div class="bar${w.future?' target':''}" style="height:${h}px;"></div></div>
+      <div class="barVal">${w.swipes}</div>
+      <div class="barLbl">${fmtWeekLabel(w.wk)}${w.future?' (target)':''}</div>`;
+    swipeChart.appendChild(col);
+  });
+
+  const maxMoney = Math.max(...weekArr.filter(w=>!w.future).map(w=>w.money),1);
+  const moneyChart = document.getElementById('moneyChart');
+  moneyChart.innerHTML = '';
+  weekArr.filter(w=>!w.future).forEach(w=>{
+    const col = document.createElement('div'); col.className='barCol';
+    const h = Math.round((w.money/maxMoney)*130);
+    col.innerHTML = `<div class="barTrack"><div class="bar" style="height:${h}px;background:var(--gold);"></div></div>
+      <div class="barVal">$${w.money.toFixed(0)}</div>
+      <div class="barLbl">${fmtWeekLabel(w.wk)}</div>`;
+    moneyChart.appendChild(col);
+  });
+
+  const hallMeals = logs.filter(l=>l.type==='hall').reduce((s,l)=>s+l.swipes,0);
+  const outMeals = logs.filter(l=>l.type==='out').length;
+  drawPie(hallMeals, outMeals);
+}
+function statCard(val,lbl){ return `<div class="statCard"><div class="val">${val}</div><div class="lbl util">${lbl}</div></div>`; }
+function fmtWeekLabel(ts){
+  const d = new Date(ts);
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function drawPie(a,b){
+  const total = a+b || 1;
+  const svg = document.getElementById('pieSvg');
+  const r=70,cx=80,cy=80;
+  const aAngle = (a/total)*360;
+  function polar(cx,cy,r,angle){ const rad=(angle-90)*Math.PI/180; return [cx+r*Math.cos(rad), cy+r*Math.sin(rad)]; }
+  function arcPath(startAngle,endAngle,color){
+    const [x1,y1]=polar(cx,cy,r,startAngle);
+    const [x2,y2]=polar(cx,cy,r,endAngle);
+    const large = endAngle-startAngle>180?1:0;
+    return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z" fill="${color}"/>`;
+  }
+  let html = '';
+  html += arcPath(0, aAngle, '#00356B');
+  html += arcPath(aAngle, 360, '#C9A24B');
+  svg.innerHTML = html;
+  document.getElementById('pieLegend').innerHTML = `
+    <div><span class="sw" style="background:#00356B;"></span>Dining Hall — ${a}</div>
+    <div><span class="sw" style="background:#C9A24B;"></span>Eating Out — ${b}</div>
+  `;
+}
+
+/* ---------------- init ---------------- */
+updateLoginBtn();
+updateSwipesSummary();
+loadMenus();
+
+})();
+</script>
+</body>
+</html>
