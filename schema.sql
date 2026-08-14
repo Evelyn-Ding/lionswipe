@@ -58,10 +58,59 @@ create policy "Users can update their own plan"
   on public.meal_plans for update
   using (auth.uid() = user_id);
 
--- Optional: restrict signups to @columbia.edu at the database level too
--- (the app already checks this client-side, but this adds a hard backstop).
--- Requires the pg_net/auth hooks setup — simplest is to leave enforcement
--- client-side and rely on Supabase Auth email confirmation.
+-- Per-user spending goal (fully optional, set/edited from the Settings modal's
+-- "Spending Goal" tab — never prompted on signup like meal_plans is). One row per
+-- user; no row simply means no goal is set. `period` controls which window
+-- index.html compares actual spend against ("today"/"this week"/etc).
+create table if not exists public.spending_goals (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  amount numeric not null,
+  period text not null check (period in ('day','week','month','semester')),
+  updated_at timestamptz not null default now()
+);
+
+alter table public.spending_goals enable row level security;
+
+create policy "Users can view their own spending goal"
+  on public.spending_goals for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert their own spending goal"
+  on public.spending_goals for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update their own spending goal"
+  on public.spending_goals for update
+  using (auth.uid() = user_id);
+
+create policy "Users can delete their own spending goal"
+  on public.spending_goals for delete
+  using (auth.uid() = user_id);
+
+-- Server-side backstop for the @columbia.edu / @barnard.edu restriction the app
+-- already checks client-side (index.html) — blocks signup even if someone bypasses
+-- the UI (devtools, a direct call to the Supabase Auth API, etc). Same trigger
+-- mechanism Supabase's own docs use for auto-populating a profile row on signup,
+-- just validating instead of inserting: https://supabase.com/docs/guides/auth/managing-user-data
+create or replace function public.enforce_edu_email()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if new.email !~* '^[^@]+@(columbia|barnard)\.edu$' then
+    raise exception 'Signups are restricted to @columbia.edu and @barnard.edu addresses';
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists enforce_edu_email_trigger on auth.users;
+create trigger enforce_edu_email_trigger
+  before insert on auth.users
+  for each row
+  execute function public.enforce_edu_email();
 
 -- Scraped daily menus (see scripts/scrape-menus.js). One row per calendar day; the
 -- `menus` JSON is shaped like { Breakfast: {...}, Lunch: {...}, Dinner: {...},

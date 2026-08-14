@@ -47,6 +47,8 @@
   .btn:hover{background:var(--navy);color:#fff;}
   .btn.solid{background:var(--navy);color:#fff;}
   .btn.solid:hover{background:#00203f;}
+  .btn.danger{border-color:var(--danger);color:var(--danger);}
+  .btn.danger:hover{background:var(--danger);color:#fff;}
   .swipesBox{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;color:var(--ink);text-align:right;}
   .swipesLine{padding:1px 0;}
   .swipesLine span{color:#8a8474;}
@@ -142,6 +144,20 @@
   .legend div{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
   .sw{width:12px;height:12px;border-radius:3px;}
   .configWarning{background:#FDEDEA;border:1px solid var(--danger);color:var(--danger);font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;padding:12px 16px;border-radius:8px;margin-bottom:18px;}
+
+  /* ---- Dining plan options ---- */
+  .planOptions{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;margin:14px 0;text-align:left;}
+  .planOptionBtn{width:100%;font-family:"Helvetica Neue",Arial,sans-serif;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;transition:.15s;}
+  .planOptionBtn:hover{border-color:var(--navy);}
+  .planOptionBtn.selected{border-color:var(--navy);background:var(--columbia-blue);}
+  .planOptionBtn.custom{border-style:dashed;}
+  .poName{font-weight:700;color:var(--navy);font-size:13px;}
+  .poMeta{font-size:11px;color:#8a8474;margin-top:2px;line-height:1.4;}
+  .planDivider{font-family:"Helvetica Neue",Arial,sans-serif;font-size:11px;color:#8a8474;text-align:center;margin:14px 0;text-transform:uppercase;letter-spacing:.05em;}
+  .settingsTabs{display:flex;gap:6px;margin-bottom:16px;}
+  .settingsTab{flex:1;font-family:"Helvetica Neue",Arial,sans-serif;font-size:12.5px;font-weight:600;padding:8px 10px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:#8a8474;cursor:pointer;}
+  .settingsTab.active{border-color:var(--navy);color:var(--navy);background:var(--columbia-blue);}
+  select.authField{-webkit-appearance:none;appearance:none;background-color:#fff;}
 </style>
 </head>
 <body>
@@ -165,6 +181,8 @@
       <div class="headerRight">
         <button class="btn solid util" id="loginBtn">Log In</button>
         <div class="swipesBox" id="swipesSummary"></div>
+        <button class="btn util" id="settingsBtn">&#9881; Settings</button>
+        <button class="btn danger util" id="deleteAccountBtn" style="display:none;">Delete Account</button>
         <button class="btn util" id="breakdownBtn">See Breakdown &rarr;</button>
       </div>
     </header>
@@ -222,7 +240,7 @@
 <div class="overlay" id="loginOverlay">
   <div class="modal util">
     <h3 id="authTitle">Log In</h3>
-    <input class="authField" id="authEmail" placeholder="uni@columbia.edu">
+    <input class="authField" id="authEmail" placeholder="uni@columbia.edu / @barnard.edu">
     <input class="authField" id="authPass" type="password" placeholder="Password">
     <div class="err" id="authErr" style="display:none;"></div>
     <div class="info" id="authInfo" style="display:none;"></div>
@@ -262,22 +280,50 @@
 
 <div class="overlay" id="planOverlay">
   <div class="modal util" style="max-width:380px;">
-    <h3 id="planTitle">Set Up Your Dining Plan</h3>
-    <p style="font-size:13px;color:#8a8474;">This helps track your swipes and pace for the rest of the semester. See <a href="https://dining.columbia.edu/student-dining-plans" target="_blank" rel="noopener">dining.columbia.edu/student-dining-plans</a> for current plan details.</p>
-    <div class="info" id="planRolloverNote" style="display:none;"></div>
+    <h3 id="planTitle">Settings</h3>
 
-    <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Plan name (optional)</label>
-    <input class="authField" id="planName" placeholder="e.g. Plan B">
+    <div class="settingsTabs" id="settingsTabs">
+      <button type="button" class="settingsTab active" data-tab="plan">Dining Plan</button>
+      <button type="button" class="settingsTab" data-tab="spend">Spending Goal</button>
+    </div>
 
-    <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Total swipes for the semester</label>
-    <input class="authField" id="planTotalSwipes" type="number" min="0" placeholder="e.g. 175">
+    <div id="planTabPanel">
+      <p style="font-size:13px;color:#8a8474;">Select your plan below, or enter it manually. Full details at <a href="https://dining.columbia.edu/student-dining-plans" target="_blank" rel="noopener">dining.columbia.edu/student-dining-plans</a>.</p>
+      <div class="info" id="planRolloverNote" style="display:none;"></div>
 
-    <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Swipes per week (target pace)</label>
-    <input class="authField" id="planWeeklyAllowance" type="number" min="0" placeholder="e.g. 14">
-    <p style="font-size:11px;color:#8a8474;text-align:left;margin-top:-4px;">Only know one? Fill in whichever you have — the other can stay a rough estimate and you can edit it later by clicking "Swipes left" in the header.</p>
+      <div class="planOptions util" id="planOptions"></div>
+
+      <div class="planDivider">or enter manually</div>
+
+      <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Plan name (optional)</label>
+      <input class="authField" id="planName" placeholder="e.g. Plan B">
+
+      <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Total swipes for the semester</label>
+      <input class="authField" id="planTotalSwipes" type="number" min="0" placeholder="e.g. 175">
+
+      <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Swipes per week (target pace)</label>
+      <input class="authField" id="planWeeklyAllowance" type="number" min="0" placeholder="e.g. 14">
+      <p style="font-size:11px;color:#8a8474;text-align:left;margin-top:-4px;">Only know one? Fill in whichever you have — the other can stay a rough estimate and you can edit it later from Settings in the header. Leave both blank to skip the dining plan entirely.</p>
+    </div>
+
+    <div id="spendTabPanel" style="display:none;">
+      <p style="font-size:13px;color:#8a8474;">Set a target for how much you spend eating out, over whatever period works for you.</p>
+
+      <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Amount</label>
+      <input class="authField" id="spendGoalAmount" type="number" min="0" step="0.01" placeholder="e.g. 50">
+
+      <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Per</label>
+      <select class="authField" id="spendGoalPeriod">
+        <option value="day">Day</option>
+        <option value="week" selected>Week</option>
+        <option value="month">Month</option>
+        <option value="semester">Semester</option>
+      </select>
+      <p style="font-size:11px;color:#8a8474;text-align:left;margin-top:-4px;">Leave the amount blank to skip / clear your spending goal.</p>
+    </div>
 
     <div class="err" id="planErr" style="display:none;"></div>
-    <button class="btn solid" id="planSubmit" style="width:100%;">Save Dining Plan</button>
+    <button class="btn solid" id="planSubmit" style="width:100%;">Save Settings</button>
     <div style="margin-top:14px;" id="planCancelWrap"><button class="btn" id="planCancel">Cancel</button></div>
   </div>
 </div>
@@ -309,6 +355,7 @@ const SEMESTER_TYPE = CFG.SEMESTER_TYPE === 'spring' ? 'spring' : 'fall';
 let currentUser = null;   // supabase auth user
 let logs = [];            // rows from meal_logs for the current user
 let userPlan = null;      // { total_swipes, weekly_allowance } from meal_plans, or null until set
+let spendGoal = null;      // { amount, period } from spending_goals, or null until set — fully optional, never prompted
 
 /* ---------------- Date/time (Columbia = America/New_York) ---------------- */
 function tick(){
@@ -441,8 +488,8 @@ async function runSearch(){
 
   const prompt = `A Columbia University student near 116th St & Broadway, NYC wants food. They said: "${query}".
 ${filterText.length ? 'Constraints: ' + filterText.join(', ') + '.' : ''}
-Give me 3-4 real, plausible nearby restaurant/food options (Morningside Heights / Harlem area). For each, include 2-3 specific popular menu items with individual prices. Respond ONLY with raw JSON, no markdown fences, in this exact shape:
-[{"name":"...", "walk":"N min walk", "note":"one short sentence", "menu_items":[{"item":"...", "price":"$X"}, {"item":"...", "price":"$X"}]}]`;
+Give me 3-4 real, plausible nearby restaurant/food options (Morningside Heights / Harlem area). For each, include its real street address and 2-3 specific popular menu items with individual prices. Respond ONLY with raw JSON, no markdown fences, in this exact shape:
+[{"name":"...", "address":"...", "walk":"N min walk", "note":"one short sentence", "menu_items":[{"item":"...", "price":"$X"}, {"item":"...", "price":"$X"}]}]`;
 
   try{
     const resp = await fetch("/api/search", {
@@ -461,10 +508,14 @@ Give me 3-4 real, plausible nearby restaurant/food options (Morningside Heights 
       const card = document.createElement('div');
       card.className = 'resultCard';
       const itemsHtml = (p.menu_items||[]).map(mi=>`<li>${mi.item} — <b>${mi.price}</b></li>`).join('');
+      const addressHtml = p.address
+        ? `<a class="meta util" href="https://maps.google.com/?q=${encodeURIComponent(p.address)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${p.address}</a>`
+        : '';
       card.innerHTML = `<div class="num">${i+1}.</div>
         <div style="flex:1;">
           <h4>${p.name}</h4>
           <div class="meta util">${p.walk||''}</div>
+          ${addressHtml}
           <p>${p.note||''}</p>
           <ul class="menuItems util">${itemsHtml}</ul>
         </div>`;
@@ -529,7 +580,7 @@ document.getElementById('spendConfirm').onclick = async ()=>{
 
 function requireLogin(){
   if(!currentUser){
-    alert('Log in with your Columbia email to log meals.');
+    alert('Log in with your Columbia or Barnard email to log meals.');
     return false;
   }
   return true;
@@ -593,11 +644,111 @@ async function savePlan(totalSwipes, weeklyAllowance, planName){
   return true;
 }
 
+/* ---------------- Spending goal (fully optional — never prompted, only set via Settings) ---------------- */
+async function loadSpendGoal(){
+  if(!supabase || !currentUser){ spendGoal = null; return; }
+  const { data, error } = await supabase.from('spending_goals').select('*').eq('user_id', currentUser.id).maybeSingle();
+  if(error){ console.error(error); }
+  spendGoal = data ? { amount: data.amount, period: data.period } : null;
+  updateSwipesSummary();
+}
+async function saveSpendGoal(amount, period){
+  if(!supabase || !currentUser) return false;
+  const { error } = await supabase.from('spending_goals').upsert({
+    user_id: currentUser.id, amount, period, updated_at: new Date().toISOString()
+  });
+  if(error){ console.error(error); return false; }
+  spendGoal = { amount, period };
+  updateSwipesSummary();
+  return true;
+}
+async function clearSpendGoal(){
+  if(!supabase || !currentUser) return false;
+  const { error } = await supabase.from('spending_goals').delete().eq('user_id', currentUser.id);
+  if(error){ console.error(error); return false; }
+  spendGoal = null;
+  updateSwipesSummary();
+  return true;
+}
+
 /* ---------------- Dining plan modal ---------------- */
+// Sophomore/Junior/Senior "Upperclass Student Dining Plans", AY 26-27
+// (dining.columbia.edu/student-dining-plans). total = base meals + complimentary
+// meals (the full usable swipe balance); weekly is only set for the plans that
+// actually reset weekly — term-based plans get a computed target-pace suggestion.
+const SEMESTER_WEEKS = 15; // rough teaching-weeks estimate, used only for term-plan pacing suggestions
+const DINING_PLANS = [
+  { name:'Plan A / Weekly',     meals:252, comp:15, weekly:14,   diningDollars:0,   flex:200, costTerm:3453 },
+  { name:'Plan A / Term',       meals:235, comp:15, weekly:null, diningDollars:100, flex:100, costTerm:3394 },
+  { name:'Plan B',               meals:175, comp:6,  weekly:null, diningDollars:100, flex:200, costTerm:3183 },
+  { name:'Plan C',               meals:150, comp:5,  weekly:null, diningDollars:0,   flex:150, costTerm:2645 },
+  { name:'Plan D',               meals:100, comp:4,  weekly:null, diningDollars:0,   flex:125, costTerm:1864 },
+  { name:'EZ Plan 18 / Weekly', meals:288, comp:21, weekly:18,   diningDollars:0,   flex:100, costTerm:4214 },
+  { name:'EZ Plan 19 / Weekly', meals:304, comp:21, weekly:19,   diningDollars:0,   flex:75,  costTerm:3793 },
+  { name:'EZ Plan 350',          meals:350, comp:0,  weekly:null, diningDollars:0,   flex:150, costTerm:4342 }
+];
+function planTotalAndWeekly(p){
+  const total = p.meals + p.comp;
+  const weekly = p.weekly || Math.round(total / SEMESTER_WEEKS);
+  return { total, weekly };
+}
+function renderPlanOptions(){
+  const wrap = document.getElementById('planOptions');
+  wrap.innerHTML = DINING_PLANS.map((p,i)=>{
+    const {total, weekly} = planTotalAndWeekly(p);
+    const paceNote = p.weekly ? `${p.weekly} swipes/week (resets Sunday)` : `~${weekly}/week avg pace`;
+    return `<button type="button" class="planOptionBtn" data-i="${i}">
+      <div class="poName">${p.name}</div>
+      <div class="poMeta">${total} total swipes (${p.meals} + ${p.comp} complimentary) &middot; ${paceNote}</div>
+      <div class="poMeta">$${p.diningDollars} Dining Dollars &middot; $${p.flex} Flex &middot; $${p.costTerm}/term</div>
+    </button>`;
+  }).join('') + `<button type="button" class="planOptionBtn custom" id="planCustomBtn">
+      <div class="poName">Custom / not sure yet</div>
+      <div class="poMeta">Enter your own numbers below</div>
+    </button>`;
+
+  wrap.querySelectorAll('.planOptionBtn[data-i]').forEach(btn=>{
+    btn.onclick = ()=>{
+      const p = DINING_PLANS[+btn.dataset.i];
+      const {total, weekly} = planTotalAndWeekly(p);
+      document.getElementById('planName').value = p.name;
+      document.getElementById('planTotalSwipes').value = total;
+      document.getElementById('planWeeklyAllowance').value = weekly;
+      wrap.querySelectorAll('.planOptionBtn').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+    };
+  });
+  document.getElementById('planCustomBtn').onclick = ()=>{
+    wrap.querySelectorAll('.planOptionBtn').forEach(b=>b.classList.remove('selected'));
+    document.getElementById('planCustomBtn').classList.add('selected');
+    document.getElementById('planName').focus();
+  };
+}
+renderPlanOptions();
+
 const planOverlay = document.getElementById('planOverlay');
-function openPlanModal({mandatory=false, rollover=false, prevType=null, leftover=0}={}){
-  document.getElementById('planTitle').textContent = mandatory ? 'Set Up Your Dining Plan' : (rollover ? 'New Semester — Review Your Plan' : 'Edit Your Dining Plan');
+function switchSettingsTab(tab){
+  document.querySelectorAll('.settingsTab').forEach(b=>b.classList.toggle('active', b.dataset.tab===tab));
+  document.getElementById('planTabPanel').style.display = tab==='spend' ? 'none' : 'block';
+  document.getElementById('spendTabPanel').style.display = tab==='spend' ? 'block' : 'none';
+}
+document.querySelectorAll('.settingsTab').forEach(btn=>{
+  btn.onclick = ()=> switchSettingsTab(btn.dataset.tab);
+});
+function openPlanModal({mandatory=false, rollover=false, prevType=null, leftover=0, tab='plan'}={}){
+  document.getElementById('planTitle').textContent = mandatory ? 'Set Up Your Account' : 'Settings';
+  switchSettingsTab(tab);
   document.getElementById('planName').value = userPlan ? (userPlan.plan_name || '') : '';
+
+  document.getElementById('spendGoalAmount').value = spendGoal ? spendGoal.amount : '';
+  document.getElementById('spendGoalPeriod').value = spendGoal ? spendGoal.period : 'week';
+
+  // Highlight the matching preset if the saved/typed plan name matches one exactly,
+  // otherwise leave nothing selected (manual entry or an unrecognized name).
+  const optsWrap = document.getElementById('planOptions');
+  optsWrap.querySelectorAll('.planOptionBtn').forEach(b=>b.classList.remove('selected'));
+  const matchIdx = userPlan ? DINING_PLANS.findIndex(p=>p.name === userPlan.plan_name) : -1;
+  if(matchIdx >= 0) optsWrap.querySelector(`.planOptionBtn[data-i="${matchIdx}"]`).classList.add('selected');
 
   const noteEl = document.getElementById('planRolloverNote');
   if(rollover && prevType === 'fall' && leftover > 0){
@@ -618,22 +769,50 @@ function openPlanModal({mandatory=false, rollover=false, prevType=null, leftover
   document.getElementById('planTotalSwipes').value = totalVal;
   document.getElementById('planWeeklyAllowance').value = weeklyVal;
   document.getElementById('planErr').style.display = 'none';
-  document.getElementById('planCancelWrap').style.display = mandatory ? 'none' : 'block';
+  document.getElementById('planCancelWrap').style.display = 'block';
+  document.getElementById('planCancel').textContent = mandatory ? 'Skip for now' : 'Cancel';
   planOverlay.classList.add('show');
 }
 document.getElementById('planCancel').onclick = ()=> planOverlay.classList.remove('show');
+document.getElementById('settingsBtn').onclick = ()=>{
+  if(!requireLogin()) return;
+  openPlanModal({ mandatory:false });
+};
 document.getElementById('planSubmit').onclick = async ()=>{
-  const planName = document.getElementById('planName').value.trim();
-  const total = parseInt(document.getElementById('planTotalSwipes').value, 10);
-  const weekly = parseInt(document.getElementById('planWeeklyAllowance').value, 10);
   const errEl = document.getElementById('planErr');
-  if(isNaN(total) || total < 0 || isNaN(weekly) || weekly < 0){
-    errEl.textContent = 'Please enter valid numbers for total swipes and swipes/week (plan name is optional).';
+  errEl.style.display = 'none';
+
+  // Both tabs save together regardless of which is active — each is independently
+  // optional. Dining plan fields only get validated/saved if at least one was
+  // touched; same for the spending goal amount (blank amount = leave/clear it).
+  const planName = document.getElementById('planName').value.trim();
+  const totalStr = document.getElementById('planTotalSwipes').value.trim();
+  const weeklyStr = document.getElementById('planWeeklyAllowance').value.trim();
+  const total = parseInt(totalStr, 10);
+  const weekly = parseInt(weeklyStr, 10);
+  const planTouched = totalStr !== '' || weeklyStr !== '';
+  if(planTouched && (isNaN(total) || total < 0 || isNaN(weekly) || weekly < 0)){
+    errEl.textContent = 'Please enter valid numbers for total swipes and swipes/week (or leave both blank to skip the dining plan).';
     errEl.style.display = 'block';
     return;
   }
-  const ok = await savePlan(total, weekly, planName);
-  if(!ok){ errEl.textContent = 'Could not save your plan — try again.'; errEl.style.display='block'; return; }
+
+  const spendAmountStr = document.getElementById('spendGoalAmount').value.trim();
+  const spendPeriod = document.getElementById('spendGoalPeriod').value;
+  const spendAmount = parseFloat(spendAmountStr);
+  const spendTouched = spendAmountStr !== '';
+  if(spendTouched && (isNaN(spendAmount) || spendAmount < 0)){
+    errEl.textContent = 'Please enter a valid spending goal amount (or leave it blank to clear the goal).';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  let ok = true;
+  if(planTouched) ok = await savePlan(total, weekly, planName) && ok;
+  if(spendTouched) ok = await saveSpendGoal(spendAmount, spendPeriod) && ok;
+  else if(spendGoal) ok = await clearSpendGoal() && ok;
+
+  if(!ok){ errEl.textContent = 'Could not save — try again.'; errEl.style.display='block'; return; }
   planOverlay.classList.remove('show');
 };
 
@@ -667,8 +846,8 @@ document.getElementById('authSubmit').onclick = async ()=>{
   const infoEl = document.getElementById('authInfo');
   errEl.style.display='none'; infoEl.style.display='none';
 
-  if(!/@columbia\.edu$/.test(email)){
-    errEl.textContent = 'Please use your Columbia email (@columbia.edu).';
+  if(!/@(columbia|barnard)\.edu$/.test(email)){
+    errEl.textContent = 'Please use your Columbia or Barnard email (@columbia.edu / @barnard.edu).';
     errEl.style.display='block'; return;
   }
   if(!pass){ errEl.textContent='Password required.'; errEl.style.display='block'; return; }
@@ -677,7 +856,7 @@ document.getElementById('authSubmit').onclick = async ()=>{
     const { data, error } = await supabase.auth.signUp({ email, password: pass });
     if(error){ errEl.textContent = error.message; errEl.style.display='block'; return; }
     if(data.user && !data.session){
-      infoEl.textContent = 'Check your Columbia email to confirm your account, then log in.';
+      infoEl.textContent = 'Check your email to confirm your account, then log in.';
       infoEl.style.display='block';
       return;
     }
@@ -694,42 +873,91 @@ if(supabase){
     updateLoginBtn();
     await refreshLogs();   // logs must be loaded before loadOrPromptPlan so rollover leftover-swipe math is correct
     loadOrPromptPlan();
+    loadSpendGoal();
   });
   supabase.auth.getSession().then(async ({data})=>{
     currentUser = data.session ? data.session.user : null;
     updateLoginBtn();
     await refreshLogs();
     loadOrPromptPlan();
+    loadSpendGoal();
   });
 }
 
 function updateLoginBtn(){
   document.getElementById('loginBtn').textContent = currentUser ? currentUser.email.split('@')[0] + ' — Log Out' : 'Log In';
+  document.getElementById('deleteAccountBtn').style.display = currentUser ? 'inline-block' : 'none';
 }
+
+document.getElementById('deleteAccountBtn').onclick = async ()=>{
+  if(!supabase || !currentUser) return;
+  if(!confirm('Delete your account and all saved dining plan / swipe / spend data? This cannot be undone.')) return;
+  const { data: { session } } = await supabase.auth.getSession();
+  if(!session){ alert('Session expired — please log in again.'); return; }
+  try{
+    const resp = await fetch('/api/delete-account', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${session.access_token}` }
+    });
+    const data = await resp.json();
+    if(!resp.ok){ alert(data.error || 'Could not delete account.'); return; }
+    await supabase.auth.signOut();
+    alert('Your account has been deleted.');
+  }catch(e){
+    alert('Could not reach the server to delete your account.');
+  }
+};
 
 /* ---------------- Swipes summary (header, plain text) ---------------- */
 function updateSwipesSummary(){
+  const now = new Date();
   const usedSemester = logs.filter(l=>l.type==='hall' && l.ts >= SEMESTER_START.getTime()).reduce((s,l)=>s+l.swipes,0);
   const weekLogs = logsThisPeriod('week');
-  const weekSwipesUsed = weekLogs.filter(l=>l.type==='hall').reduce((s,l)=>s+l.swipes,0);
   const spentOutWeek = weekLogs.filter(l=>l.type==='out').reduce((s,l)=>s+l.amount,0);
 
-  // "Swipes/week left" and "Swipes left" depend on a real saved plan (total_swipes /
-  // weekly_allowance) — show "—" rather than inventing a number when there isn't one yet.
-  const weekLeft = userPlan ? Math.max(0, userPlan.weekly_allowance - weekSwipesUsed) : '—';
-  const left = userPlan ? Math.max(0, userPlan.total_swipes - usedSemester) : '—';
+  // "Swipes left" depends on a real saved plan (total_swipes) — show "—" rather
+  // than inventing a number when there isn't one yet.
+  const left = userPlan ? Math.max(0, userPlan.total_swipes - usedSemester) : null;
+
+  // "Swipes/week needed" is the pace required *right now* to use up whatever's
+  // left of the plan by SEMESTER_END — remaining swipes divided by remaining
+  // weeks (rounded up so you don't undershoot and run past the semester with
+  // swipes unused). Recomputed on every log, so it rises if you fall behind and
+  // drops as you catch up — not a fixed weekly allowance.
+  const weeksRemaining = Math.max(1, Math.ceil((SEMESTER_END - now) / (7*24*3600*1000)));
+  const weekNeeded = userPlan ? Math.ceil(left / weeksRemaining) : '—';
+
+  // Spending goal progress: recompute "spent" over whatever period the goal is
+  // set for (day/week/month/semester) — only rendered at all when a goal is set,
+  // since there's nothing meaningful to show otherwise.
+  const spendGoalLine = spendGoal
+    ? (()=>{
+        const spentInGoalPeriod = logsThisPeriod(spendGoal.period).filter(l=>l.type==='out').reduce((s,l)=>s+l.amount,0);
+        const periodLabel = {day:'today', week:'this week', month:'this month', semester:'this semester'}[spendGoal.period];
+        const over = spentInGoalPeriod > spendGoal.amount;
+        return `<div class="swipesLine editable" id="spendGoalLine" title="Click to edit your spending goal"><span>Spend goal (${periodLabel}):</span><b style="${over?'color:var(--danger);':''}">$${spentInGoalPeriod.toFixed(2)} / $${spendGoal.amount.toFixed(2)}</b></div>`;
+      })()
+    : '';
 
   document.getElementById('swipesSummary').innerHTML = `
     <div class="swipesLine"><span>Swipes used:</span><b>${usedSemester}</b></div>
-    <div class="swipesLine"><span>Swipes/week left:</span><b>${weekLeft}</b></div>
-    <div class="swipesLine editable" id="swipesLeftLine" title="Click to edit your dining plan"><span>Swipes left:</span><b>${left}</b></div>
+    <div class="swipesLine"><span>Swipes/week needed:</span><b>${weekNeeded}</b></div>
+    <div class="swipesLine editable" id="swipesLeftLine" title="Click to edit your dining plan"><span>Swipes left:</span><b>${left===null?'—':left}</b></div>
     <div class="swipesLine"><span>Total spent eating out this week:</span><b>$${spentOutWeek.toFixed(2)}</b></div>
+    ${spendGoalLine}
   `;
   const slLine = document.getElementById('swipesLeftLine');
   if(slLine){
     slLine.onclick = ()=>{
       if(!currentUser){ alert('Log in to set up your dining plan.'); return; }
-      openPlanModal({ mandatory:false });
+      openPlanModal({ mandatory:false, tab:'plan' });
+    };
+  }
+  const sgLine = document.getElementById('spendGoalLine');
+  if(sgLine){
+    sgLine.onclick = ()=>{
+      if(!currentUser){ alert('Log in to set up your spending goal.'); return; }
+      openPlanModal({ mandatory:false, tab:'spend' });
     };
   }
 }
@@ -758,10 +986,15 @@ function startOfWeek(d){
   return dt;
 }
 function weekKey(ts){ return startOfWeek(ts).getTime(); }
-function logsThisPeriod(period){
+function periodCutoff(period){
   const now = Date.now();
-  const cutoff = period==='week' ? startOfWeek(now).getTime() : (function(){const d=new Date();d.setDate(1);d.setHours(0,0,0,0);return d.getTime();})();
-  return logs.filter(l=>l.ts>=cutoff);
+  if(period==='day'){ const d=new Date(); d.setHours(0,0,0,0); return d.getTime(); }
+  if(period==='week'){ return startOfWeek(now).getTime(); }
+  if(period==='semester'){ return SEMESTER_START.getTime(); }
+  const d=new Date(); d.setDate(1); d.setHours(0,0,0,0); return d.getTime(); // month (default)
+}
+function logsThisPeriod(period){
+  return logs.filter(l=>l.ts>=periodCutoff(period));
 }
 
 function renderBreakdown(){
@@ -773,11 +1006,20 @@ function renderBreakdown(){
   const spentWeek = weekLogs.filter(l=>l.type==='out').reduce((s,l)=>s+l.amount,0);
   const spentMonth = monthLogs.filter(l=>l.type==='out').reduce((s,l)=>s+l.amount,0);
 
+  const spendGoalCard = spendGoal
+    ? (()=>{
+        const spentInGoalPeriod = logsThisPeriod(spendGoal.period).filter(l=>l.type==='out').reduce((s,l)=>s+l.amount,0);
+        const periodLabel = {day:'Day', week:'Week', month:'Month', semester:'Semester'}[spendGoal.period];
+        return statCard(`$${spentInGoalPeriod.toFixed(2)} / $${spendGoal.amount.toFixed(2)}`, `Spend Goal (${periodLabel})`);
+      })()
+    : '';
+
   document.getElementById('statGrid').innerHTML = `
     ${statCard(usedSemester,'Swipes Used')}
     ${statCard(swipesLeft===null?'—':swipesLeft,'Swipes Left')}
     ${statCard('$'+spentWeek.toFixed(2),'Spent This Week')}
     ${statCard('$'+spentMonth.toFixed(2),'Spent This Month')}
+    ${spendGoalCard}
   `;
 
   const weeks = {};
@@ -796,9 +1038,15 @@ function renderBreakdown(){
     const wk = thisWeekStart - i*weekMs;
     weekArr.push({wk, ...(weeks[wk]||{swipes:0,money:0}), future:false});
   }
+  // Same "pace needed to finish on time" math as the header's Swipes/week needed
+  // stat — real weeks left until SEMESTER_END, not a fixed lookahead window — so
+  // the two numbers always agree. Also caps how many future bars get drawn so the
+  // chart never projects target bars past the actual end of the semester.
   const remainingSwipes = swipesLeft || 0;
-  const targetPerWeek = Math.max(1, Math.round(remainingSwipes / (futureWeeks+1)));
-  for(let i=1;i<=futureWeeks;i++){
+  const weeksRemaining = Math.max(1, Math.ceil((SEMESTER_END - now) / weekMs));
+  const targetPerWeek = Math.max(1, Math.ceil(remainingSwipes / weeksRemaining));
+  const futureWeeksToShow = Math.min(futureWeeks, weeksRemaining);
+  for(let i=1;i<=futureWeeksToShow;i++){
     const wk = thisWeekStart + i*weekMs;
     weekArr.push({wk, swipes:targetPerWeek, money:0, future:true});
   }

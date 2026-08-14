@@ -82,6 +82,8 @@ const server = http.createServer(async (req, res) => {
       await callApiHandler('api/search.js', req, res);
     } else if (req.url.startsWith('/api/menus')) {
       await callApiHandler('api/menus.js', req, res);
+    } else if (req.url.startsWith('/api/delete-account')) {
+      await callApiHandler('api/delete-account.js', req, res);
     } else {
       serveStatic(req, res);
     }
