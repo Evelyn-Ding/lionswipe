@@ -55,6 +55,8 @@
   .swipesLine b{color:var(--navy);font-weight:700;margin-left:5px;}
   .swipesLine.editable{cursor:pointer;}
   .swipesLine.editable:hover span, .swipesLine.editable:hover b{text-decoration:underline;}
+  .swipesLine.guestNote{margin-top:4px;font-size:11px;color:#8a8474;max-width:220px;}
+  .swipesLine.guestNote a{color:var(--navy);font-weight:600;}
 
   /* ---- Meal period tabs ---- */
   .tabs{display:flex;justify-content:center;gap:10px;margin-bottom:22px;flex-wrap:wrap;}
@@ -546,7 +548,6 @@ Give me 3-4 real, plausible nearby restaurant/food options (Morningside Heights 
 let swipeHall = null, swipeCount = 1;
 const swipeOverlay = document.getElementById('swipeOverlay');
 function openSwipeModal(hall){
-  if(!requireLogin()) return;
   swipeHall = hall; swipeCount = 1;
   document.getElementById('swipeHallName').textContent = hall;
   document.getElementById('swipeCount').textContent = swipeCount;
@@ -564,7 +565,6 @@ document.getElementById('swipeConfirm').onclick = async ()=>{
 let spendPlace = null;
 const spendOverlay = document.getElementById('spendOverlay');
 function openSpendModal(name){
-  if(!requireLogin()) return;
   spendPlace = name;
   document.getElementById('spendPlaceName').textContent = name;
   document.getElementById('spendAmount').value = '';
@@ -578,17 +578,43 @@ document.getElementById('spendConfirm').onclick = async ()=>{
   spendOverlay.classList.remove('show');
 };
 
-function requireLogin(){
-  if(!currentUser){
-    alert('Log in with your Columbia or Barnard email to log meals.');
-    return false;
-  }
-  return true;
+/* ---------------- Guest (logged-out) local storage ----------------
+   Not signed in yet? Everything below still works — swipes/spend logs, the
+   dining plan, and the spending goal are all kept in this browser's
+   localStorage instead of Supabase, so nothing is lost on refresh. Real cookies
+   would be the wrong tool here (4KB cap, sent on every request, nothing
+   server-side reads them) — localStorage is a much bigger, purely client-side
+   key/value store, which is exactly what "remember this for a guest" needs.
+   On sign-in/sign-up, maybeOfferGuestMigration() offers to copy this local
+   data into the new Supabase-backed account. */
+const GUEST_LOGS_KEY = 'lionsfeast_guest_logs';
+const GUEST_PLAN_KEY = 'lionsfeast_guest_plan';
+const GUEST_SPEND_GOAL_KEY = 'lionsfeast_guest_spend_goal';
+function loadGuestLogs(){ try{ return JSON.parse(localStorage.getItem(GUEST_LOGS_KEY)) || []; }catch(e){ return []; } }
+function saveGuestLogs(arr){ localStorage.setItem(GUEST_LOGS_KEY, JSON.stringify(arr)); }
+function loadGuestPlan(){ try{ return JSON.parse(localStorage.getItem(GUEST_PLAN_KEY)); }catch(e){ return null; } }
+function saveGuestPlan(plan){ plan ? localStorage.setItem(GUEST_PLAN_KEY, JSON.stringify(plan)) : localStorage.removeItem(GUEST_PLAN_KEY); }
+function loadGuestSpendGoal(){ try{ return JSON.parse(localStorage.getItem(GUEST_SPEND_GOAL_KEY)); }catch(e){ return null; } }
+function saveGuestSpendGoal(g){ g ? localStorage.setItem(GUEST_SPEND_GOAL_KEY, JSON.stringify(g)) : localStorage.removeItem(GUEST_SPEND_GOAL_KEY); }
+function clearGuestData(){
+  localStorage.removeItem(GUEST_LOGS_KEY);
+  localStorage.removeItem(GUEST_PLAN_KEY);
+  localStorage.removeItem(GUEST_SPEND_GOAL_KEY);
 }
 
-/* ---------------- Supabase: logs & dining plan ---------------- */
+/* ---------------- Supabase (signed in) / localStorage (guest): logs & dining plan ---------------- */
 async function insertLog(entry){
-  if(!supabase || !currentUser) return;
+  const clean = { ts: new Date(entry.ts).getTime(), type: entry.type, name: entry.name,
+                   swipes: entry.swipes || null, amount: entry.amount || null };
+  if(!currentUser){
+    const guestLogs = loadGuestLogs();
+    guestLogs.push(clean);
+    saveGuestLogs(guestLogs);
+    logs = guestLogs;
+    updateSwipesSummary();
+    return;
+  }
+  if(!supabase) return;
   const row = { user_id: currentUser.id, ts: entry.ts, type: entry.type, name: entry.name,
                 swipes: entry.swipes || null, amount: entry.amount || null };
   const { error } = await supabase.from('meal_logs').insert(row);
@@ -596,7 +622,8 @@ async function insertLog(entry){
   await refreshLogs();
 }
 async function refreshLogs(){
-  if(!supabase || !currentUser){ logs = []; updateSwipesSummary(); return; }
+  if(!currentUser){ logs = loadGuestLogs(); updateSwipesSummary(); return; }
+  if(!supabase){ logs = []; updateSwipesSummary(); return; }
   const { data, error } = await supabase.from('meal_logs').select('*').eq('user_id', currentUser.id).order('ts', {ascending:true});
   if(error){ console.error(error); return; }
   logs = (data||[]).map(r=>({ ts: new Date(r.ts).getTime(), type:r.type, name:r.name, swipes:r.swipes, amount:r.amount }));
@@ -604,7 +631,8 @@ async function refreshLogs(){
 }
 
 async function loadOrPromptPlan(){
-  if(!supabase || !currentUser){ userPlan = null; return; }
+  if(!currentUser){ userPlan = loadGuestPlan(); updateSwipesSummary(); return; }
+  if(!supabase){ userPlan = null; return; }
   const { data, error } = await supabase.from('meal_plans').select('*').eq('user_id', currentUser.id).maybeSingle();
   if(error){ console.error(error); }
   if(data){
@@ -631,29 +659,43 @@ async function loadOrPromptPlan(){
   }
 }
 async function savePlan(totalSwipes, weeklyAllowance, planName){
-  if(!supabase || !currentUser) return false;
+  const planObj = { total_swipes: totalSwipes, weekly_allowance: weeklyAllowance, plan_name: planName || '',
+                     semester_start: SEMESTER_START.toISOString(), semester_type: SEMESTER_TYPE };
+  if(!currentUser){
+    saveGuestPlan(planObj);
+    userPlan = planObj;
+    updateSwipesSummary();
+    return true;
+  }
+  if(!supabase) return false;
   const { error } = await supabase.from('meal_plans').upsert({
     user_id: currentUser.id, total_swipes: totalSwipes, weekly_allowance: weeklyAllowance,
     plan_name: planName || null, semester_start: SEMESTER_START.toISOString(), semester_type: SEMESTER_TYPE,
     updated_at: new Date().toISOString()
   });
   if(error){ console.error(error); return false; }
-  userPlan = { total_swipes: totalSwipes, weekly_allowance: weeklyAllowance, plan_name: planName || '',
-               semester_start: SEMESTER_START.toISOString(), semester_type: SEMESTER_TYPE };
+  userPlan = planObj;
   updateSwipesSummary();
   return true;
 }
 
 /* ---------------- Spending goal (fully optional — never prompted, only set via Settings) ---------------- */
 async function loadSpendGoal(){
-  if(!supabase || !currentUser){ spendGoal = null; return; }
+  if(!currentUser){ spendGoal = loadGuestSpendGoal(); updateSwipesSummary(); return; }
+  if(!supabase){ spendGoal = null; return; }
   const { data, error } = await supabase.from('spending_goals').select('*').eq('user_id', currentUser.id).maybeSingle();
   if(error){ console.error(error); }
   spendGoal = data ? { amount: data.amount, period: data.period } : null;
   updateSwipesSummary();
 }
 async function saveSpendGoal(amount, period){
-  if(!supabase || !currentUser) return false;
+  if(!currentUser){
+    spendGoal = { amount, period };
+    saveGuestSpendGoal(spendGoal);
+    updateSwipesSummary();
+    return true;
+  }
+  if(!supabase) return false;
   const { error } = await supabase.from('spending_goals').upsert({
     user_id: currentUser.id, amount, period, updated_at: new Date().toISOString()
   });
@@ -663,7 +705,13 @@ async function saveSpendGoal(amount, period){
   return true;
 }
 async function clearSpendGoal(){
-  if(!supabase || !currentUser) return false;
+  if(!currentUser){
+    saveGuestSpendGoal(null);
+    spendGoal = null;
+    updateSwipesSummary();
+    return true;
+  }
+  if(!supabase) return false;
   const { error } = await supabase.from('spending_goals').delete().eq('user_id', currentUser.id);
   if(error){ console.error(error); return false; }
   spendGoal = null;
@@ -775,7 +823,6 @@ function openPlanModal({mandatory=false, rollover=false, prevType=null, leftover
 }
 document.getElementById('planCancel').onclick = ()=> planOverlay.classList.remove('show');
 document.getElementById('settingsBtn').onclick = ()=>{
-  if(!requireLogin()) return;
   openPlanModal({ mandatory:false });
 };
 document.getElementById('planSubmit').onclick = async ()=>{
@@ -867,20 +914,61 @@ document.getElementById('authSubmit').onclick = async ()=>{
   loginOverlay.classList.remove('show');
 };
 
+// Offers to copy this browser's guest (localStorage) logs/plan/spending-goal into
+// the account that just signed in — fires on a real sign-in/sign-up (Supabase's
+// 'SIGNED_IN' event), not on every page load of an already-logged-in session.
+async function maybeOfferGuestMigration(){
+  const guestLogs = loadGuestLogs();
+  const guestPlan = loadGuestPlan();
+  const guestGoal = loadGuestSpendGoal();
+  if(guestLogs.length===0 && !guestPlan && !guestGoal) return;
+
+  const parts = [];
+  if(guestLogs.length) parts.push(`${guestLogs.length} logged swipe${guestLogs.length===1?'':'s'}/meal${guestLogs.length===1?'':'s'}`);
+  if(guestPlan) parts.push('a dining plan');
+  if(guestGoal) parts.push('a spending goal');
+
+  const migrate = confirm(`You have guest data saved in this browser (${parts.join(', ')}). Migrate it into your account now? (This will overwrite any dining plan/spending goal already saved on your account.)`);
+  if(!migrate) return;
+
+  try{
+    if(guestLogs.length){
+      const rows = guestLogs.map(l=>({ user_id: currentUser.id, ts: new Date(l.ts).toISOString(), type: l.type, name: l.name, swipes: l.swipes||null, amount: l.amount||null }));
+      const { error } = await supabase.from('meal_logs').insert(rows);
+      if(error) throw error;
+    }
+    if(guestPlan){
+      const ok = await savePlan(guestPlan.total_swipes, guestPlan.weekly_allowance, guestPlan.plan_name);
+      if(!ok) throw new Error('plan save failed');
+    }
+    if(guestGoal){
+      const ok = await saveSpendGoal(guestGoal.amount, guestGoal.period);
+      if(!ok) throw new Error('spending goal save failed');
+    }
+    clearGuestData();
+    await refreshLogs();
+    alert('Your guest data has been migrated into your account.');
+  }catch(e){
+    console.error(e);
+    alert("Could not migrate your guest data — it's still saved locally, you can try again next time you log in.");
+  }
+}
+
 if(supabase){
   supabase.auth.onAuthStateChange(async (_event, session)=>{
     currentUser = session ? session.user : null;
     updateLoginBtn();
     await refreshLogs();   // logs must be loaded before loadOrPromptPlan so rollover leftover-swipe math is correct
-    loadOrPromptPlan();
-    loadSpendGoal();
+    await loadOrPromptPlan();
+    await loadSpendGoal();
+    if(_event === 'SIGNED_IN' && currentUser) await maybeOfferGuestMigration();
   });
   supabase.auth.getSession().then(async ({data})=>{
     currentUser = data.session ? data.session.user : null;
     updateLoginBtn();
     await refreshLogs();
-    loadOrPromptPlan();
-    loadSpendGoal();
+    await loadOrPromptPlan();
+    await loadSpendGoal();
   });
 }
 
@@ -939,35 +1027,39 @@ function updateSwipesSummary(){
       })()
     : '';
 
+  // Guests get everything (logging, dining plan, spending goal) working locally
+  // via localStorage — this just nudges them that it's not permanent/synced yet.
+  const guestNote = !currentUser
+    ? `<div class="swipesLine guestNote">Saved in this browser only — <a href="#" id="guestSignInLink">sign in / create account</a> to save it permanently.</div>`
+    : '';
+
   document.getElementById('swipesSummary').innerHTML = `
     <div class="swipesLine"><span>Swipes used:</span><b>${usedSemester}</b></div>
     <div class="swipesLine"><span>Swipes/week needed:</span><b>${weekNeeded}</b></div>
     <div class="swipesLine editable" id="swipesLeftLine" title="Click to edit your dining plan"><span>Swipes left:</span><b>${left===null?'—':left}</b></div>
     <div class="swipesLine"><span>Total spent eating out this week:</span><b>$${spentOutWeek.toFixed(2)}</b></div>
     ${spendGoalLine}
+    ${guestNote}
   `;
   const slLine = document.getElementById('swipesLeftLine');
   if(slLine){
-    slLine.onclick = ()=>{
-      if(!currentUser){ alert('Log in to set up your dining plan.'); return; }
-      openPlanModal({ mandatory:false, tab:'plan' });
-    };
+    slLine.onclick = ()=> openPlanModal({ mandatory:false, tab:'plan' });
   }
   const sgLine = document.getElementById('spendGoalLine');
   if(sgLine){
-    sgLine.onclick = ()=>{
-      if(!currentUser){ alert('Log in to set up your spending goal.'); return; }
-      openPlanModal({ mandatory:false, tab:'spend' });
+    sgLine.onclick = ()=> openPlanModal({ mandatory:false, tab:'spend' });
+  }
+  const guestLink = document.getElementById('guestSignInLink');
+  if(guestLink){
+    guestLink.onclick = (e)=>{
+      e.preventDefault();
+      authMode = 'signup'; renderAuth(); loginOverlay.classList.add('show');
     };
   }
 }
 
 /* ---------------- Breakdown page ---------------- */
 document.getElementById('breakdownBtn').onclick = ()=>{
-  if(!currentUser){
-    alert('Log in to see your breakdown.');
-    return;
-  }
   document.getElementById('mainPage').classList.add('hide');
   document.getElementById('breakdownPage').classList.add('show');
   renderBreakdown();
