@@ -1,4 +1,5 @@
 # LionsFeast
+Link to demo (on Vercel) so you don't have to run locally: https://lions-feast.vercel.app/
 
 Columbia dining menus, an off-campus food search backed by Claude, and meal-swipe /
 spending tracking. Frontend is a single `index.html` (no build step); `api/` holds
