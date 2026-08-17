@@ -118,6 +118,20 @@
   .counter .n{font-size:28px;min-width:36px;font-weight:600;color:var(--navy);}
   .modal input[type=number]{width:100%;padding:10px;font-size:16px;border:1.5px solid var(--line);border-radius:8px;margin:14px 0;font-family:"Helvetica Neue",Arial,sans-serif;}
   .modal .row{display:flex;gap:8px;justify-content:center;margin-top:10px;}
+
+  /* ---- Help modal ---- */
+  .helpModal{max-width:560px;text-align:left;max-height:85vh;overflow-y:auto;}
+  .helpModal h3{text-align:center;}
+  .helpSection{margin-bottom:18px;}
+  .helpSection h4{margin:0 0 6px;color:var(--navy);font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.06em;}
+  .helpSection p{margin:0;font-size:14px;line-height:1.5;color:var(--ink);}
+  .helpPlaceholder{color:#8a8474;font-style:italic;}
+  .helpDivider{border:none;border-top:1px solid var(--line);margin:20px 0;}
+  .helpChat{display:flex;flex-direction:column;gap:10px;}
+  .helpChatLog{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;padding:4px 2px;}
+  .helpChatMsg{font-size:13px;line-height:1.4;padding:8px 12px;border-radius:12px;max-width:85%;}
+  .helpChatMsg.user{align-self:flex-end;background:var(--navy);color:#fff;}
+  .helpChatMsg.bot{align-self:flex-start;background:rgba(156,209,232,.25);color:var(--ink);}
   .authField{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:8px;margin-bottom:10px;font-family:"Helvetica Neue",Arial,sans-serif;font-size:14px;}
   .authSwitch{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;color:var(--navy);cursor:pointer;text-decoration:underline;margin-top:8px;display:inline-block;}
   .err{color:var(--danger);font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;margin-top:-4px;margin-bottom:8px;}
@@ -183,7 +197,8 @@
       <div class="headerRight">
         <button class="btn solid util" id="loginBtn">Log In</button>
         <div class="swipesBox" id="swipesSummary"></div>
-        <button class="btn util" id="settingsBtn">&#9881; Settings</button>
+        <button class="btn util" id="helpBtn">&#63; Help</button>
+        <button class="btn util" id="settingsBtn">&#9881; Profile</button>
         <button class="btn danger util" id="deleteAccountBtn" style="display:none;">Delete Account</button>
         <button class="btn util" id="breakdownBtn">See Breakdown &rarr;</button>
       </div>
@@ -282,7 +297,7 @@
 
 <div class="overlay" id="planOverlay">
   <div class="modal util" style="max-width:380px;">
-    <h3 id="planTitle">Settings</h3>
+    <h3 id="planTitle">Profile</h3>
 
     <div class="settingsTabs" id="settingsTabs">
       <button type="button" class="settingsTab active" data-tab="plan">Dining Plan</button>
@@ -305,7 +320,7 @@
 
       <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Swipes per week (target pace)</label>
       <input class="authField" id="planWeeklyAllowance" type="number" min="0" placeholder="e.g. 14">
-      <p style="font-size:11px;color:#8a8474;text-align:left;margin-top:-4px;">Only know one? Fill in whichever you have — the other can stay a rough estimate and you can edit it later from Settings in the header. Leave both blank to skip the dining plan entirely.</p>
+      <p style="font-size:11px;color:#8a8474;text-align:left;margin-top:-4px;">Only know one? Fill in whichever you have — the other can stay a rough estimate and you can edit it later from Profile in the header. Leave both blank to skip the dining plan entirely.</p>
     </div>
 
     <div id="spendTabPanel" style="display:none;">
@@ -325,8 +340,47 @@
     </div>
 
     <div class="err" id="planErr" style="display:none;"></div>
-    <button class="btn solid" id="planSubmit" style="width:100%;">Save Settings</button>
+    <button class="btn solid" id="planSubmit" style="width:100%;">Save Profile</button>
     <div style="margin-top:14px;" id="planCancelWrap"><button class="btn" id="planCancel">Cancel</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="helpOverlay">
+  <div class="modal helpModal util">
+    <h3>Help &amp; About</h3>
+
+    <div class="helpSection">
+      <h4>What LionsFeast Does</h4>
+      <p class="helpPlaceholder">[insert app description]</p>
+    </div>
+
+    <div class="helpSection">
+      <h4>What Info We Ask For</h4>
+      <p class="helpPlaceholder">[insert info needed from user]</p>
+    </div>
+
+    <div class="helpSection">
+      <h4>The Problem We're Solving</h4>
+      <p class="helpPlaceholder">[insert problem statement]</p>
+    </div>
+
+    <div class="helpSection">
+      <h4>Our Story</h4>
+      <p class="helpPlaceholder">[insert co-founder story / inspiration]</p>
+    </div>
+
+    <hr class="helpDivider">
+
+    <div class="helpSection helpChat">
+      <h4>Ask a Question</h4>
+      <div class="helpChatLog" id="helpChatLog"></div>
+      <div class="chatRow util" style="max-width:none;margin:0;">
+        <input id="helpChatInput" placeholder="Ask how LionsFeast works...">
+        <button id="helpChatSend">&#10148;</button>
+      </div>
+    </div>
+
+    <div style="margin-top:14px;text-align:center;"><button class="btn" id="helpCancel">Close</button></div>
   </div>
 </div>
 
@@ -784,7 +838,7 @@ document.querySelectorAll('.settingsTab').forEach(btn=>{
   btn.onclick = ()=> switchSettingsTab(btn.dataset.tab);
 });
 function openPlanModal({mandatory=false, rollover=false, prevType=null, leftover=0, tab='plan'}={}){
-  document.getElementById('planTitle').textContent = mandatory ? 'Set Up Your Account' : 'Settings';
+  document.getElementById('planTitle').textContent = mandatory ? 'Set Up Your Account' : 'Profile';
   switchSettingsTab(tab);
   document.getElementById('planName').value = userPlan ? (userPlan.plan_name || '') : '';
 
@@ -825,6 +879,52 @@ document.getElementById('planCancel').onclick = ()=> planOverlay.classList.remov
 document.getElementById('settingsBtn').onclick = ()=>{
   openPlanModal({ mandatory:false });
 };
+
+/* ---------------- Help modal + chatbot ---------------- */
+const helpOverlay = document.getElementById('helpOverlay');
+document.getElementById('helpBtn').onclick = ()=> helpOverlay.classList.add('show');
+document.getElementById('helpCancel').onclick = ()=> helpOverlay.classList.remove('show');
+
+const HELP_CONTEXT = `[insert app description, purpose, and founder story here — used as context for the help chatbot]`;
+
+async function sendHelpChat(){
+  const input = document.getElementById('helpChatInput');
+  const question = input.value.trim();
+  if(!question) return;
+  const log = document.getElementById('helpChatLog');
+
+  const userMsg = document.createElement('div');
+  userMsg.className = 'helpChatMsg user';
+  userMsg.textContent = question;
+  log.appendChild(userMsg);
+  input.value = '';
+  log.scrollTop = log.scrollHeight;
+
+  const botMsg = document.createElement('div');
+  botMsg.className = 'helpChatMsg bot';
+  botMsg.textContent = '...';
+  log.appendChild(botMsg);
+  log.scrollTop = log.scrollHeight;
+
+  const prompt = `You are a helpful assistant answering questions about the LionsFeast app for a user who opened its Help panel. Use this context about the app:\n${HELP_CONTEXT}\n\nUser question: "${question}"\n\nAnswer concisely and helpfully in 2-4 sentences.`;
+
+  try{
+    const resp = await fetch("/api/search", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body: JSON.stringify({ prompt })
+    });
+    const data = await resp.json();
+    botMsg.textContent = data.text || "Sorry, I couldn't find an answer to that.";
+  }catch(e){
+    botMsg.textContent = "Something went wrong — please try again.";
+  }
+  log.scrollTop = log.scrollHeight;
+}
+document.getElementById('helpChatSend').onclick = sendHelpChat;
+document.getElementById('helpChatInput').addEventListener('keydown', e=>{
+  if(e.key === 'Enter') sendHelpChat();
+});
 document.getElementById('planSubmit').onclick = async ()=>{
   const errEl = document.getElementById('planErr');
   errEl.style.display = 'none';
