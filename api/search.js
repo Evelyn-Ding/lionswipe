@@ -19,12 +19,18 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 1200,
+        model: 'claude-sonnet-5',
+        max_tokens: 4000,
+        tools: [
+          { type: 'web_search_20260209', name: 'web_search', max_uses: 8 }
+        ],
         messages: [{ role: 'user', content: prompt }]
       })
     });
     const data = await response.json();
+    if (data.type === 'error') {
+      return res.status(502).json({ error: data.error?.message || 'Claude API error' });
+    }
     const text = (data.content || [])
       .filter(c => c.type === 'text')
       .map(c => c.text)

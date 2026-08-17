@@ -490,7 +490,8 @@ async function runSearch(){
 
   const prompt = `A Columbia University student near 116th St & Broadway, NYC wants food. They said: "${query}".
 ${filterText.length ? 'Constraints: ' + filterText.join(', ') + '.' : ''}
-Give me 3-4 real, plausible nearby restaurant/food options (Morningside Heights / Harlem area). For each, include its real street address and 2-3 specific popular menu items with individual prices. Respond ONLY with raw JSON, no markdown fences, in this exact shape:
+Use the web_search tool to find 3-4 real nearby restaurants (Morningside Heights / Harlem area) that fit the request. For each one, search for its actual current menu (official website, Google Maps listing, Yelp, or a delivery app page) and read the real prices there — do not guess, estimate, or recall prices from memory. Include the restaurant's real street address, an approximate walk time from Columbia, and 2-3 specific menu items with the exact prices you found. If you cannot find a verifiable price for an item, leave it out rather than making one up.
+Do not output any text before you are done searching. Respond with ONLY raw JSON, no markdown fences and no commentary, in this exact shape:
 [{"name":"...", "address":"...", "walk":"N min walk", "note":"one short sentence", "menu_items":[{"item":"...", "price":"$X"}, {"item":"...", "price":"$X"}]}]`;
 
   try{
@@ -500,7 +501,10 @@ Give me 3-4 real, plausible nearby restaurant/food options (Morningside Heights 
       body: JSON.stringify({ prompt })
     });
     const data = await resp.json();
-    const clean = (data.text||'').replace(/```json|```/g,'').trim();
+    let clean = (data.text||'').replace(/```json|```/g,'').trim();
+    const jsonStart = clean.indexOf('[');
+    const jsonEnd = clean.lastIndexOf(']');
+    if (jsonStart !== -1 && jsonEnd !== -1) clean = clean.slice(jsonStart, jsonEnd + 1);
     let places = [];
     try{ places = JSON.parse(clean); }catch(e){ places = []; }
 
