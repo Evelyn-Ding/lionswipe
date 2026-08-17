@@ -95,7 +95,7 @@ const server = http.createServer(async (req, res) => {
 });
 
 server.listen(PORT, () => {
-  console.log(`LionsFeast dev server running at http://localhost:${PORT}`);
+  console.log(`LionSwipe dev server running at http://localhost:${PORT}`);
   if (!process.env.ANTHROPIC_API_KEY) {
     console.warn('  Note: ANTHROPIC_API_KEY is not set — /api/search will fail until it is. Add it to a .env file in the project root.');
   }

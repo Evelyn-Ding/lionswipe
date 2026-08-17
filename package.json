@@ -1,8 +1,8 @@
 {
-  "name": "lionsfeast",
+  "name": "lionswipe",
   "version": "1.0.0",
   "private": true,
-  "description": "LionsFeast — Columbia dining menus, off-campus search, and meal-swipe/spend tracking.",
+  "description": "LionSwipe — Columbia dining menus, off-campus search, and meal-swipe/spend tracking.",
   "scripts": {
     "dev:local": "node scripts/dev-server.js",
     "scrape:menus": "node scripts/scrape-menus.js",

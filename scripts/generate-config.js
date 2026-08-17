@@ -16,7 +16,7 @@ if (!cfg.SUPABASE_URL || !cfg.SUPABASE_ANON_KEY) {
 
 const out = `// AUTO-GENERATED at build time from Vercel environment variables. Do not edit directly —
 // edit config.example.js for defaults, or set env vars in Vercel Project Settings instead.
-window.LION_MART_CONFIG = ${JSON.stringify(cfg, null, 2)};
+window.LIONSWIPE_CONFIG = ${JSON.stringify(cfg, null, 2)};
 `;
 
 fs.writeFileSync('config.js', out);

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LionsFeast</title>
+<title>LionSwipe</title>
 <style>
   :root{
     --navy:#00356B;
@@ -191,7 +191,7 @@
         <div class="semesterLine">Days until semester end: <b id="semesterDays">--</b></div>
       </div>
       <div class="brand">
-        <h1>LionsFeast<span class="col-motif"><span></span><span></span><span></span></span></h1>
+        <h1>LionSwipe<span class="col-motif"><span></span><span></span><span></span></span></h1>
         <div class="subtitle">Let the Lions feast</div>
       </div>
       <div class="headerRight">
@@ -231,7 +231,7 @@
 
   <!-- ================= BREAKDOWN PAGE ================= -->
   <div id="breakdownPage">
-    <button class="btn backBtn util" id="backBtn">&larr; Back to Lion Mart</button>
+    <button class="btn backBtn util" id="backBtn">&larr; Back to LionSwipe</button>
     <h2 style="color:var(--navy);font-weight:400;">Your Breakdown</h2>
     <div class="statGrid" id="statGrid"></div>
     <div class="chartBlock">
@@ -350,7 +350,7 @@
     <h3>Help &amp; About</h3>
 
     <div class="helpSection">
-      <h4>What LionsFeast Does</h4>
+      <h4>What LionSwipe Does</h4>
       <p class="helpPlaceholder">[insert app description]</p>
     </div>
 
@@ -375,7 +375,7 @@
       <h4>Ask a Question</h4>
       <div class="helpChatLog" id="helpChatLog"></div>
       <div class="chatRow util" style="max-width:none;margin:0;">
-        <input id="helpChatInput" placeholder="Ask how LionsFeast works...">
+        <input id="helpChatInput" placeholder="Ask how LionSwipe works...">
         <button id="helpChatSend">&#10148;</button>
       </div>
     </div>
@@ -390,7 +390,7 @@
 (async function(){
 
 /* ---------------- Supabase setup ---------------- */
-const CFG = window.LION_MART_CONFIG || {};
+const CFG = window.LIONSWIPE_CONFIG || {};
 let supabase = null;
 const cfgWarn = document.getElementById('configWarning');
 if(!CFG.SUPABASE_URL || CFG.SUPABASE_URL.includes('YOUR-PROJECT-REF')){
@@ -645,9 +645,9 @@ document.getElementById('spendConfirm').onclick = async ()=>{
    key/value store, which is exactly what "remember this for a guest" needs.
    On sign-in/sign-up, maybeOfferGuestMigration() offers to copy this local
    data into the new Supabase-backed account. */
-const GUEST_LOGS_KEY = 'lionsfeast_guest_logs';
-const GUEST_PLAN_KEY = 'lionsfeast_guest_plan';
-const GUEST_SPEND_GOAL_KEY = 'lionsfeast_guest_spend_goal';
+const GUEST_LOGS_KEY = 'lionswipe_guest_logs';
+const GUEST_PLAN_KEY = 'lionswipe_guest_plan';
+const GUEST_SPEND_GOAL_KEY = 'lionswipe_guest_spend_goal';
 function loadGuestLogs(){ try{ return JSON.parse(localStorage.getItem(GUEST_LOGS_KEY)) || []; }catch(e){ return []; } }
 function saveGuestLogs(arr){ localStorage.setItem(GUEST_LOGS_KEY, JSON.stringify(arr)); }
 function loadGuestPlan(){ try{ return JSON.parse(localStorage.getItem(GUEST_PLAN_KEY)); }catch(e){ return null; } }
@@ -910,7 +910,7 @@ async function sendHelpChat(){
   log.appendChild(botMsg);
   log.scrollTop = log.scrollHeight;
 
-  const prompt = `You are a helpful assistant answering questions about the LionsFeast app for a user who opened its Help panel. Use this context about the app:\n${HELP_CONTEXT}\n\nUser question: "${question}"\n\nAnswer concisely and helpfully in 2-4 sentences.`;
+  const prompt = `You are a helpful assistant answering questions about the LionSwipe app for a user who opened its Help panel. Use this context about the app:\n${HELP_CONTEXT}\n\nUser question: "${question}"\n\nAnswer concisely and helpfully in 2-4 sentences.`;
 
   try{
     const resp = await fetch("/api/search", {

@@ -1,4 +1,4 @@
-# LionsFeast
+# LionSwipe
 Link to demo (on Vercel) so you don't have to run locally: https://lions-feast.vercel.app/
 
 Columbia dining menus, an off-campus food search backed by Claude, and meal-swipe /
