@@ -351,17 +351,17 @@
 
     <div class="helpSection">
       <h4>What LionSwipe Does</h4>
-      <p class="helpPlaceholder">[insert app description]</p>
+      <p>LionSwipe helps Columbia students get more out of their meal plan. It shows real Columbia dining hall menus, searches nearby off-campus restaurants and looks up their actual current prices, and tracks your dining swipes and off-campus spending so you always know where you stand for the semester.</p>
     </div>
 
     <div class="helpSection">
       <h4>What Info We Ask For</h4>
-      <p class="helpPlaceholder">[insert info needed from user]</p>
+      <p>To track your plan, we ask how many swipes your meal plan has and when your semester starts and ends (or you can pick a preset plan). From there you just log dining hall swipes and off-campus purchases as you go, and you can optionally set a spending goal by day, week, month, or semester. You can use LionSwipe as a guest with no sign-up — your data stays in your browser until you create an account, at which point we offer to migrate it over.</p>
     </div>
 
     <div class="helpSection">
       <h4>The Problem We're Solving</h4>
-      <p class="helpPlaceholder">[insert problem statement]</p>
+      <p>It's easy to lose track of how many meal swipes you have left, overspend on off-campus food without noticing, and not know what's actually on the dining hall menu until you're standing in line. LionSwipe puts real menus, real off-campus prices, and a running tally of swipes and spending in one place, so you can make quick, informed food decisions.</p>
     </div>
 
     <div class="helpSection">
@@ -889,7 +889,7 @@ const helpOverlay = document.getElementById('helpOverlay');
 document.getElementById('helpBtn').onclick = ()=> helpOverlay.classList.add('show');
 document.getElementById('helpCancel').onclick = ()=> helpOverlay.classList.remove('show');
 
-const HELP_CONTEXT = `[insert app description, purpose, and founder story here — used as context for the help chatbot]`;
+const HELP_CONTEXT = `LionSwipe is a web app that helps Columbia students get more out of their meal plan. It shows real-time Columbia dining hall menus, and can search nearby off-campus restaurants for food that fits what a student is looking for, using live web search to return real, current menu prices instead of guesses. It also tracks meal swipes and off-campus spending: students log dining hall swipes and off-campus purchases, can pick a preset semester swipe plan or set a custom one, and can optionally set a spending goal by day, week, month, or semester. LionSwipe works fully as a guest with no login required (data is saved locally in the browser) and offers to migrate that data over if the student later creates an account. The problem it solves: students often don't know what's on the dining hall menu, lose track of remaining swipes, and overspend off-campus without a clear picture — LionSwipe brings all of that into one place.`;
 
 async function sendHelpChat(){
   const input = document.getElementById('helpChatInput');
