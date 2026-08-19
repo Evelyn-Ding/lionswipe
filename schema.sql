@@ -112,6 +112,35 @@ create trigger enforce_edu_email_trigger
   for each row
   execute function public.enforce_edu_email();
 
+-- Ask Roarie conversation history (see the "Ask Roarie for ideas" panel in index.html).
+-- One row per user, mirroring meal_plans/spending_goals — `messages` is the raw
+-- Anthropic-format array ([{role, content}, ...]) so it can be replayed straight back
+-- into /api/chat.js on the next turn with no reshaping. Guest conversations live in
+-- localStorage and migrate here on sign-in, same as guest logs/plan/spending goal.
+create table if not exists public.roarie_chats (
+  user_id uuid primary key references auth.users(id) on delete cascade,
+  messages jsonb not null,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.roarie_chats enable row level security;
+
+create policy "Users can view their own Roarie chat"
+  on public.roarie_chats for select
+  using (auth.uid() = user_id);
+
+create policy "Users can insert their own Roarie chat"
+  on public.roarie_chats for insert
+  with check (auth.uid() = user_id);
+
+create policy "Users can update their own Roarie chat"
+  on public.roarie_chats for update
+  using (auth.uid() = user_id);
+
+create policy "Users can delete their own Roarie chat"
+  on public.roarie_chats for delete
+  using (auth.uid() = user_id);
+
 -- Scraped daily menus (see scripts/scrape-menus.js). One row per calendar day; the
 -- `menus` JSON is shaped like { Breakfast: {...}, Lunch: {...}, Dinner: {...},
 -- "Late Night": {...} } matching SAMPLE_MENUS in api/menus.js. Written only by the

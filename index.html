@@ -93,8 +93,26 @@
   .chatRow input{flex:1;border:none;outline:none;font-family:"Helvetica Neue",Arial,sans-serif;font-size:14px;background:transparent;}
   .chatRow button{background:var(--navy);color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:15px;}
 
-  #results{display:none;flex-direction:column;gap:16px;margin-bottom:20px;}
-  #results.show{display:flex;}
+  /* ---- Not Appetizing: two panels ---- */
+  .notAppPanels{display:flex;gap:18px;align-items:flex-start;}
+  .notAppPanel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;flex:1 1 0;min-width:0;}
+  .roariePanel{flex:1.4 1 0;}
+  @media (max-width:760px){
+    .notAppPanels{flex-direction:column;}
+  }
+  .notAppHeadRow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px;}
+  .notAppPanel h3{margin:0;color:var(--navy);font-weight:400;font-size:19px;}
+  .roarieQ{margin:14px 0 2px;color:var(--navy);font-weight:400;font-size:16px;}
+  .roarieSub{font-size:11.5px;color:#8a8474;margin-bottom:10px;}
+  .enterMealSub{font-size:13px;color:#8a8474;margin:6px 0 16px;}
+
+  .roarieLog{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
+  .roarieTurn{display:flex;flex-direction:column;gap:10px;}
+  .roarieMsg{font-family:"Helvetica Neue",Arial,sans-serif;font-size:13.5px;line-height:1.45;padding:9px 14px;border-radius:14px;max-width:85%;}
+  .roarieMsg.user{align-self:flex-end;background:var(--navy);color:#fff;}
+  .roarieMsg.bot{align-self:flex-start;background:rgba(156,209,232,.25);color:var(--ink);}
+  .roarieCards{display:flex;flex-direction:column;gap:12px;}
+
   .resultCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:flex;gap:14px;cursor:pointer;}
   .resultCard:hover{border-color:var(--navy);}
   .resultCard .num{font-size:20px;color:var(--gold);font-weight:600;min-width:24px;}
@@ -214,18 +232,34 @@
     </div>
 
     <div id="searchSection">
-      <div class="filters" id="filters">
-        <button class="filterBtn" data-f="u20">Under $20</button>
-        <button class="filterBtn" data-f="u30">Under $30</button>
-        <button class="filterBtn" data-f="w5">&lt;5 min walk</button>
-        <button class="filterBtn" data-f="w10">&lt;10 min walk</button>
+      <div class="notAppPanels">
+        <div class="notAppPanel roariePanel">
+          <div class="notAppHeadRow">
+            <h3>Ask Roarie for ideas</h3>
+            <button class="btn util" id="roarieNewChatBtn">New Chat</button>
+          </div>
+          <h4 class="roarieQ">What do you feel like eating?</h4>
+          <div class="roarieSub util">Enter cravings, meal ideas, or what you don't want to eat</div>
+          <div class="chatRow util">
+            <input id="chatInput" placeholder="e.g. mac and cheese and bbq brisket&hellip;">
+            <button id="sendBtn">&#10148;</button>
+          </div>
+          <div class="filters" id="filters">
+            <button class="filterBtn" data-f="u20">Under $20</button>
+            <button class="filterBtn" data-f="u30">Under $30</button>
+            <button class="filterBtn" data-f="w5">&lt;5 min walk</button>
+            <button class="filterBtn" data-f="w10">&lt;10 min walk</button>
+          </div>
+          <div class="roarieLog" id="roarieLog"></div>
+          <div class="loading" id="loadingMsg" style="display:none;">Roarie is asking around campus...</div>
+        </div>
+
+        <div class="notAppPanel">
+          <h3>Enter Your Own Meal</h3>
+          <div class="enterMealSub util">Already know where you ate? Skip the chat and log it directly.</div>
+          <button class="btn solid util" id="enterMealBtn" style="width:100%;">+ Log a Meal</button>
+        </div>
       </div>
-      <div class="chatRow util">
-        <input id="chatInput" placeholder="What do you feel like eating? Enter cravings, meal ideas, or just vibes...">
-        <button id="sendBtn">&#10148;</button>
-      </div>
-      <div class="loading" id="loadingMsg" style="display:none;">Asking around campus...</div>
-      <div id="results"></div>
     </div>
   </div>
 
@@ -285,7 +319,8 @@
 
 <div class="overlay" id="spendOverlay">
   <div class="modal">
-    <h3 id="spendPlaceName">Chipotle</h3>
+    <p class="util" style="font-size:13px;color:#8a8474;">Where did you eat?</p>
+    <input class="authField" id="spendPlaceName" placeholder="e.g. Chipotle">
     <p class="util" style="font-size:13px;color:#8a8474;">How much did you spend?</p>
     <input type="number" id="spendAmount" placeholder="$0.00" step="0.01">
     <div class="row">
@@ -523,18 +558,121 @@ function cookYourOwnCard(){
   };
 }
 
-/* ---------------- Claude API search ---------------- */
-const resultsEl = document.getElementById('results');
-const loadingMsg = document.getElementById('loadingMsg');
-document.getElementById('sendBtn').onclick = runSearch;
-document.getElementById('chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter') runSearch(); });
+/* ---------------- Roarie: multi-turn food chat ----------------
+   Replaces the old one-shot search. `roarieMessages` is kept in the exact Anthropic
+   Messages API shape ([{role,content}, ...]) — that's the single source of truth: it's
+   what gets sent back to /api/chat.js each turn, what gets persisted (localStorage for
+   guests, the roarie_chats table once signed in), and what renderRoarieLog() replays to
+   rebuild the on-screen conversation. Assistant turns are stored as Roarie's raw JSON
+   text reply so the model gets back exactly what it said, with no lossy reshaping. */
+const GUEST_ROARIE_KEY = 'lionswipe_guest_roarie_chat';
+function loadGuestRoarieChat(){ try{ return JSON.parse(localStorage.getItem(GUEST_ROARIE_KEY)) || []; }catch(e){ return []; } }
+function saveGuestRoarieChat(msgs){ localStorage.setItem(GUEST_ROARIE_KEY, JSON.stringify(msgs)); }
 
-async function runSearch(){
-  const query = document.getElementById('chatInput').value.trim();
+let roarieMessages = [];
+const roarieLogEl = document.getElementById('roarieLog');
+const loadingMsg = document.getElementById('loadingMsg');
+
+function parseRoarieContent(content){
+  let clean = (content||'').replace(/```json|```/g,'').trim();
+  const s = clean.indexOf('{'); const e = clean.lastIndexOf('}');
+  if(s!==-1 && e!==-1) clean = clean.slice(s, e+1);
+  try{ return JSON.parse(clean); }catch(err){ return { reply: content || "Here's what I found:", recommendations: [] }; }
+}
+
+function resultCardEl(p, num, onClick){
+  const card = document.createElement('div');
+  card.className = 'resultCard';
+  const itemsHtml = (p.menu_items||[]).map(mi=>`<li>${mi.item} — <b>${mi.price}</b></li>`).join('');
+  const addressHtml = p.address
+    ? `<a class="meta util" href="https://maps.google.com/?q=${encodeURIComponent(p.address)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${p.address}</a>`
+    : '';
+  card.innerHTML = `<div class="num">${num}.</div>
+    <div style="flex:1;">
+      <h4>${p.name}</h4>
+      <div class="meta util">${p.walk||''}</div>
+      ${addressHtml}
+      <p>${p.note||''}</p>
+      <ul class="menuItems util">${itemsHtml}</ul>
+    </div>`;
+  card.onclick = onClick;
+  return card;
+}
+function cookYourOwnCardEl(num){
+  const cy = cookYourOwnCard();
+  const card = document.createElement('div');
+  card.className = 'resultCard cook';
+  card.innerHTML = `<div class="num">${num}.</div>
+    <div style="flex:1;">
+      <h4>${cy.name}</h4>
+      <div class="meta util">${cy.meta}</div>
+      <ul class="menuItems util">${cy.items.map(i=>`<li>${i}</li>`).join('')}</ul>
+    </div>
+    <div class="price">${cy.price}</div>`;
+  card.onclick = ()=> openSpendModal(cy.name);
+  return card;
+}
+
+function renderRoarieLog(){
+  roarieLogEl.innerHTML = '';
+  let turn = null;
+  roarieMessages.forEach(m=>{
+    if(m.role === 'user'){
+      turn = document.createElement('div');
+      turn.className = 'roarieTurn';
+      const bubble = document.createElement('div');
+      bubble.className = 'roarieMsg user';
+      bubble.textContent = m.content;
+      turn.appendChild(bubble);
+      roarieLogEl.appendChild(turn);
+    } else {
+      if(!turn){ turn = document.createElement('div'); turn.className = 'roarieTurn'; roarieLogEl.appendChild(turn); }
+      const parsed = parseRoarieContent(m.content);
+      const bubble = document.createElement('div');
+      bubble.className = 'roarieMsg bot';
+      bubble.textContent = parsed.reply || "Here's what I found:";
+      turn.appendChild(bubble);
+      const recs = parsed.recommendations || [];
+      if(recs.length){
+        const cardsWrap = document.createElement('div');
+        cardsWrap.className = 'roarieCards';
+        recs.forEach((p,i)=> cardsWrap.appendChild(resultCardEl(p, i+1, ()=> openSpendModal(p.name))));
+        cardsWrap.appendChild(cookYourOwnCardEl(recs.length+1));
+        turn.appendChild(cardsWrap);
+      }
+      turn = null;
+    }
+  });
+  window.scrollTo({ top: document.body.scrollHeight });
+}
+
+async function saveRoarieChat(){
+  if(!currentUser){ saveGuestRoarieChat(roarieMessages); return; }
+  if(!supabase) return;
+  const { error } = await supabase.from('roarie_chats').upsert({
+    user_id: currentUser.id, messages: roarieMessages, updated_at: new Date().toISOString()
+  });
+  if(error) console.error(error);
+}
+async function loadRoarieChat(){
+  if(!currentUser){ roarieMessages = loadGuestRoarieChat(); renderRoarieLog(); return; }
+  if(!supabase){ roarieMessages = []; renderRoarieLog(); return; }
+  const { data, error } = await supabase.from('roarie_chats').select('*').eq('user_id', currentUser.id).maybeSingle();
+  if(error) console.error(error);
+  roarieMessages = (data && data.messages) ? data.messages : [];
+  renderRoarieLog();
+}
+
+async function sendRoarieMessage(){
+  const input = document.getElementById('chatInput');
+  const query = input.value.trim();
   if(!query) return;
-  resultsEl.classList.add('show');
-  resultsEl.innerHTML = '';
+  input.value = '';
+
+  roarieMessages.push({ role:'user', content: query });
+  renderRoarieLog();
   loadingMsg.style.display = 'block';
+  saveRoarieChat();
 
   let filterText = [];
   if(activeFilters.has('u20')) filterText.push('under $20 per person');
@@ -542,65 +680,29 @@ async function runSearch(){
   if(activeFilters.has('w5')) filterText.push('less than a 5 minute walk from Columbia University (116th & Broadway)');
   if(activeFilters.has('w10')) filterText.push('less than a 10 minute walk from Columbia University (116th & Broadway)');
 
-  const prompt = `A Columbia University student near 116th St & Broadway, NYC wants food. They said: "${query}".
-${filterText.length ? 'Constraints: ' + filterText.join(', ') + '.' : ''}
-Use the web_search tool to find 3-4 real nearby restaurants (Morningside Heights / Harlem area) that fit the request. For each one, search for its actual current menu (official website, Google Maps listing, Yelp, or a delivery app page) and read the real prices there — do not guess, estimate, or recall prices from memory. Include the restaurant's real street address, an approximate walk time from Columbia, and 2-3 specific menu items with the exact prices you found. If you cannot find a verifiable price for an item, leave it out rather than making one up.
-Do not output any text before you are done searching. Respond with ONLY raw JSON, no markdown fences and no commentary, in this exact shape:
-[{"name":"...", "address":"...", "walk":"N min walk", "note":"one short sentence", "menu_items":[{"item":"...", "price":"$X"}, {"item":"...", "price":"$X"}]}]`;
-
   try{
-    const resp = await fetch("/api/search", {
+    const resp = await fetch("/api/chat", {
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ prompt })
+      body: JSON.stringify({ messages: roarieMessages, filters: filterText })
     });
     const data = await resp.json();
-    let clean = (data.text||'').replace(/```json|```/g,'').trim();
-    const jsonStart = clean.indexOf('[');
-    const jsonEnd = clean.lastIndexOf(']');
-    if (jsonStart !== -1 && jsonEnd !== -1) clean = clean.slice(jsonStart, jsonEnd + 1);
-    let places = [];
-    try{ places = JSON.parse(clean); }catch(e){ places = []; }
-
-    loadingMsg.style.display = 'none';
-    resultsEl.innerHTML = '';
-    places.forEach((p,i)=>{
-      const card = document.createElement('div');
-      card.className = 'resultCard';
-      const itemsHtml = (p.menu_items||[]).map(mi=>`<li>${mi.item} — <b>${mi.price}</b></li>`).join('');
-      const addressHtml = p.address
-        ? `<a class="meta util" href="https://maps.google.com/?q=${encodeURIComponent(p.address)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">${p.address}</a>`
-        : '';
-      card.innerHTML = `<div class="num">${i+1}.</div>
-        <div style="flex:1;">
-          <h4>${p.name}</h4>
-          <div class="meta util">${p.walk||''}</div>
-          ${addressHtml}
-          <p>${p.note||''}</p>
-          <ul class="menuItems util">${itemsHtml}</ul>
-        </div>`;
-      card.onclick = ()=> openSpendModal(p.name);
-      resultsEl.appendChild(card);
-    });
-    // Always append Cook Your Own
-    const cy = cookYourOwnCard();
-    const cyEl = document.createElement('div');
-    cyEl.className = 'resultCard cook';
-    cyEl.innerHTML = `<div class="num">${places.length+1}.</div>
-      <div style="flex:1;">
-        <h4>${cy.name}</h4>
-        <div class="meta util">${cy.meta}</div>
-        <ul class="menuItems util">${cy.items.map(i=>`<li>${i}</li>`).join('')}</ul>
-      </div>
-      <div class="price">${cy.price}</div>`;
-    cyEl.onclick = ()=> openSpendModal(cy.name);
-    resultsEl.appendChild(cyEl);
-
+    const replyText = data.text || '{"reply":"Sorry, I couldn\'t come up with anything just now — try again?","recommendations":[]}';
+    roarieMessages.push({ role:'assistant', content: replyText });
   }catch(e){
-    loadingMsg.style.display='none';
-    resultsEl.innerHTML = `<div class="loading">Couldn't reach the search right now. Try again in a moment.</div>`;
+    roarieMessages.push({ role:'assistant', content: '{"reply":"Something went wrong reaching me — try again in a moment.","recommendations":[]}' });
   }
+  loadingMsg.style.display = 'none';
+  renderRoarieLog();
+  saveRoarieChat();
 }
+document.getElementById('sendBtn').onclick = sendRoarieMessage;
+document.getElementById('chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendRoarieMessage(); });
+document.getElementById('roarieNewChatBtn').onclick = ()=>{
+  roarieMessages = [];
+  renderRoarieLog();
+  saveRoarieChat();
+};
 
 /* ---------------- Swipe modal ---------------- */
 let swipeHall = null, swipeCount = 1;
@@ -619,20 +721,25 @@ document.getElementById('swipeConfirm').onclick = async ()=>{
   swipeOverlay.classList.remove('show');
 };
 
-/* ---------------- Spend modal ---------------- */
-let spendPlace = null;
+/* ---------------- Spend modal ----------------
+   Shared by clicking a search/chat result (name pre-filled) and by the "Enter Your
+   Own Meal" panel (opened with no name, so the field starts blank and focused) — one
+   modal, one code path, so both entry points stay visually/behaviorally identical. */
 const spendOverlay = document.getElementById('spendOverlay');
 function openSpendModal(name){
-  spendPlace = name;
-  document.getElementById('spendPlaceName').textContent = name;
+  const nameInput = document.getElementById('spendPlaceName');
+  nameInput.value = name || '';
   document.getElementById('spendAmount').value = '';
   spendOverlay.classList.add('show');
+  if(name){ document.getElementById('spendAmount').focus(); } else { nameInput.focus(); }
 }
+document.getElementById('enterMealBtn').onclick = ()=> openSpendModal();
 document.getElementById('spendCancel').onclick = ()=> spendOverlay.classList.remove('show');
 document.getElementById('spendConfirm').onclick = async ()=>{
+  const name = document.getElementById('spendPlaceName').value.trim();
   const amt = parseFloat(document.getElementById('spendAmount').value);
-  if(isNaN(amt) || amt<0) return;
-  await insertLog({ type:'out', name:spendPlace, amount:amt, ts:new Date().toISOString() });
+  if(!name || isNaN(amt) || amt<0) return;
+  await insertLog({ type:'out', name, amount:amt, ts:new Date().toISOString() });
   spendOverlay.classList.remove('show');
 };
 
@@ -658,6 +765,7 @@ function clearGuestData(){
   localStorage.removeItem(GUEST_LOGS_KEY);
   localStorage.removeItem(GUEST_PLAN_KEY);
   localStorage.removeItem(GUEST_SPEND_GOAL_KEY);
+  localStorage.removeItem(GUEST_ROARIE_KEY);
 }
 
 /* ---------------- Supabase (signed in) / localStorage (guest): logs & dining plan ---------------- */
@@ -1025,14 +1133,16 @@ async function maybeOfferGuestMigration(){
   const guestLogs = loadGuestLogs();
   const guestPlan = loadGuestPlan();
   const guestGoal = loadGuestSpendGoal();
-  if(guestLogs.length===0 && !guestPlan && !guestGoal) return;
+  const guestChat = loadGuestRoarieChat();
+  if(guestLogs.length===0 && !guestPlan && !guestGoal && guestChat.length===0) return;
 
   const parts = [];
   if(guestLogs.length) parts.push(`${guestLogs.length} logged swipe${guestLogs.length===1?'':'s'}/meal${guestLogs.length===1?'':'s'}`);
   if(guestPlan) parts.push('a dining plan');
   if(guestGoal) parts.push('a spending goal');
+  if(guestChat.length) parts.push('your Roarie chat history');
 
-  const migrate = confirm(`You have guest data saved in this browser (${parts.join(', ')}). Migrate it into your account now? (This will overwrite any dining plan/spending goal already saved on your account.)`);
+  const migrate = confirm(`You have guest data saved in this browser (${parts.join(', ')}). Migrate it into your account now? (This will overwrite any dining plan/spending goal/Roarie chat already saved on your account.)`);
   if(!migrate) return;
 
   try{
@@ -1048,6 +1158,11 @@ async function maybeOfferGuestMigration(){
     if(guestGoal){
       const ok = await saveSpendGoal(guestGoal.amount, guestGoal.period);
       if(!ok) throw new Error('spending goal save failed');
+    }
+    if(guestChat.length){
+      roarieMessages = guestChat;
+      await saveRoarieChat();
+      renderRoarieLog();
     }
     clearGuestData();
     await refreshLogs();
@@ -1065,6 +1180,7 @@ if(supabase){
     await refreshLogs();   // logs must be loaded before loadOrPromptPlan so rollover leftover-swipe math is correct
     await loadOrPromptPlan();
     await loadSpendGoal();
+    await loadRoarieChat();
     if(_event === 'SIGNED_IN' && currentUser) await maybeOfferGuestMigration();
   });
   supabase.auth.getSession().then(async ({data})=>{
@@ -1073,6 +1189,7 @@ if(supabase){
     await refreshLogs();
     await loadOrPromptPlan();
     await loadSpendGoal();
+    await loadRoarieChat();
   });
 }
 
