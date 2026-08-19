@@ -4,127 +4,154 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>LionSwipe</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy:#00356B;
-    --columbia-blue:#9CD1E8;
-    --cream:#F6F3EC;
-    --ink:#1B2430;
-    --gold:#C9A24B;
-    --line:#D9D2C2;
+    --navy:#565486;
+    --columbia-blue:#B8D4E8;
+    --cream:#FFFFFF;
+    --ink:#1F2937;
+    --gold:#B8D4E8;
+    --line:#E2E8F0;
     --card:#FFFFFF;
-    --danger:#B34B3C;
-    --radius:10px;
+    --secondary:#F2F4F7;
+    --muted:#94A3B8;
+    --primary-fg:#FFFFFF;
+    --danger:#DC2626;
+    --radius:12px;
+    --font-display:'Outfit',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    --font-body:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
+    --danger-bg:#FDEDEA;
+    --success:#4a7a4a;
+  }
+  [data-theme="dark"]{
+    --navy:#FFFFFF;
+    --columbia-blue:#1E3A6F;
+    --cream:#0D1B3E;
+    --ink:#FFFFFF;
+    --gold:#1E3A6F;
+    --line:rgba(255,255,255,.22);
+    --card:#16244D;
+    --secondary:#1A2E5C;
+    --muted:#D1D5DB;
+    --primary-fg:#0D1B3E;
+    --danger:#EF4444;
+    --danger-bg:rgba(239,68,68,.15);
+    --success:#7DD87D;
   }
   *{box-sizing:border-box;}
   body{
     margin:0; background:var(--cream); color:var(--ink);
-    font-family:"Iowan Old Style","Palatino Linotype",Georgia,serif;
+    font-family:var(--font-body);
   }
-  .util{font-family:"Helvetica Neue",Arial,sans-serif;}
+  h1,h2,h3,h4{font-family:var(--font-display);}
+  .util{font-family:var(--font-body);}
   #app{max-width:1100px;margin:0 auto;padding:22px 20px 80px;}
 
   /* ---- Header ---- */
   header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid var(--navy);margin-bottom:22px;}
-  .clock{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);opacity:.75;}
+  .clock{flex:1 1 0;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);opacity:.75;}
   .clock .time{font-size:20px;font-weight:600;display:block;margin-top:2px;letter-spacing:0;text-transform:none;}
-  .semesterLine{margin-top:8px;font-size:11.5px;color:#7a7568;text-transform:none;letter-spacing:0;}
+  .semesterLine{margin-top:8px;font-size:11.5px;color:var(--muted);text-transform:none;letter-spacing:0;}
   .semesterLine b{color:var(--navy);}
   .brand{text-align:center;flex:1;}
-  .brand h1{margin:0;font-size:38px;font-weight:400;letter-spacing:.02em;color:var(--navy);}
-  .brand .subtitle{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-top:2px;}
-  .col-motif{display:inline-flex;gap:3px;vertical-align:middle;margin-left:8px;}
-  .col-motif span{display:inline-block;width:3px;height:16px;background:var(--gold);}
+  .brand h1{margin:0;font-size:40px;font-weight:800;letter-spacing:-.01em;color:var(--navy);}
+  .brand .subtitle{font-family:var(--font-body);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-top:2px;}
+  .brandButtons{display:flex;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .brandIcon{display:inline-block;vertical-align:middle;margin-left:10px;font-size:0.75em;}
 
-  .headerRight{text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:10px;min-width:190px;}
+  .headerRight{flex:1 1 0;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:10px;min-width:190px;}
   button{font-family:inherit;cursor:pointer;}
   .btn{
-    font-family:"Helvetica Neue",Arial,sans-serif;
+    font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
     border:1.5px solid var(--navy);background:var(--card);color:var(--navy);
     padding:7px 14px;border-radius:20px;font-size:12.5px;font-weight:600;
     letter-spacing:.02em; transition:.15s;
   }
-  .btn:hover{background:var(--navy);color:#fff;}
-  .btn.solid{background:var(--navy);color:#fff;}
-  .btn.solid:hover{background:#00203f;}
+  .btn:hover{background:var(--navy);color:var(--primary-fg);}
+  .btn.solid{background:var(--navy);color:var(--primary-fg);}
+  .btn.solid:hover{background:#454268;}
   .btn.danger{border-color:var(--danger);color:var(--danger);}
   .btn.danger:hover{background:var(--danger);color:#fff;}
-  .swipesBox{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;color:var(--ink);text-align:right;}
+  .swipesBox{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12px;color:var(--ink);text-align:right;}
   .swipesLine{padding:1px 0;}
-  .swipesLine span{color:#8a8474;}
+  .swipesLine span{color:var(--muted);}
   .swipesLine b{color:var(--navy);font-weight:700;margin-left:5px;}
   .swipesLine.editable{cursor:pointer;}
   .swipesLine.editable:hover span, .swipesLine.editable:hover b{text-decoration:underline;}
-  .swipesLine.guestNote{margin-top:4px;font-size:11px;color:#8a8474;max-width:220px;}
+  .swipesLine.guestNote{margin-top:4px;font-size:11px;color:var(--muted);max-width:220px;}
   .swipesLine.guestNote a{color:var(--navy);font-weight:600;}
 
   /* ---- Meal period tabs ---- */
   .tabs{display:flex;justify-content:center;gap:10px;margin-bottom:22px;flex-wrap:wrap;}
   .tab{
-    font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;font-weight:600;
+    font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;
     padding:8px 20px;border-radius:20px;border:1.5px solid var(--navy);background:transparent;color:var(--navy);
   }
-  .tab.active{background:var(--navy);color:#fff;}
+  .tab.active{background:var(--navy);color:var(--primary-fg);}
 
   /* ---- Dining hall grid ---- */
   .hallGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:22px;}
   .hallCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;cursor:pointer;transition:.15s;position:relative;}
-  .hallCard:hover{border-color:var(--navy);box-shadow:0 3px 10px rgba(0,53,107,.08);}
+  .hallCard:hover{border-color:var(--navy);box-shadow:0 3px 10px rgba(86,84,134,.12);}
   .hallCard.closed{opacity:.55;cursor:default;}
   .hallCard h3{margin:0 0 2px;font-size:17px;color:var(--navy);}
-  .hallCard .hours{font-family:"Helvetica Neue",Arial,sans-serif;font-size:11px;color:#8a8474;margin-bottom:8px;}
-  .hallCard .stationName{font-family:"Helvetica Neue",Arial,sans-serif;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);margin:8px 0 3px;}
+  .hallCard .hours{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:11px;color:var(--muted);margin-bottom:8px;}
+  .hallCard .stationName{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--gold);margin:8px 0 3px;}
   .hallCard ul{list-style:none;padding:0;margin:0;font-size:14px;line-height:1.55;}
-  .hallCard .closedTxt{font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;color:#8a8474;}
+  .hallCard .closedTxt{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;color:var(--muted);}
 
   /* ---- Not appetizing toggle ---- */
   .toggleWrap{text-align:center;margin:26px 0;}
   #notAppBtn{padding:11px 34px;border-radius:24px;font-size:14px;}
-  .toggleSub{font-family:"Helvetica Neue",Arial,sans-serif;font-size:11px;color:#8a8474;margin-top:6px;}
+  .toggleSub{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:11px;color:var(--muted);margin-top:6px;}
 
   #searchSection{display:none;}
   #searchSection.show{display:block;}
 
   .filters{display:flex;justify-content:center;gap:8px;margin:14px 0;flex-wrap:wrap;}
-  .filterBtn{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;padding:6px 14px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--ink);}
+  .filterBtn{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12px;padding:6px 14px;border-radius:16px;border:1px solid var(--line);background:var(--card);color:var(--ink);}
   .filterBtn.active{background:var(--columbia-blue);border-color:var(--navy);color:var(--navy);font-weight:600;}
 
   .chatRow{display:flex;gap:8px;align-items:center;background:var(--card);border:1.5px solid var(--navy);border-radius:26px;padding:6px 8px 6px 18px;max-width:640px;margin:0 auto 24px;}
-  .chatRow input{flex:1;border:none;outline:none;font-family:"Helvetica Neue",Arial,sans-serif;font-size:14px;background:transparent;}
-  .chatRow button{background:var(--navy);color:#fff;border:none;width:36px;height:36px;border-radius:50%;font-size:15px;}
+  .chatRow input{flex:1;border:none;outline:none;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:14px;background:transparent;color:var(--ink);}
+  ::placeholder{color:var(--muted);opacity:1;}
+  .chatRow button{background:var(--navy);color:var(--primary-fg);border:none;width:36px;height:36px;border-radius:50%;font-size:15px;}
 
   /* ---- Not Appetizing: two panels ---- */
-  .notAppPanels{display:flex;gap:18px;align-items:flex-start;}
+  .notAppPanels{display:flex;gap:18px;align-items:stretch;}
   .notAppPanel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px;flex:1 1 0;min-width:0;}
   .roariePanel{flex:1.4 1 0;}
   @media (max-width:760px){
     .notAppPanels{flex-direction:column;}
   }
   .notAppHeadRow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:4px;}
-  .notAppPanel h3{margin:0;color:var(--navy);font-weight:400;font-size:19px;}
-  .roarieQ{margin:14px 0 2px;color:var(--navy);font-weight:400;font-size:16px;}
-  .roarieSub{font-size:11.5px;color:#8a8474;margin-bottom:10px;}
-  .enterMealSub{font-size:13px;color:#8a8474;margin:6px 0 16px;}
+  .notAppPanel h3{margin:0;color:var(--navy);font-weight:700;font-size:19px;}
+  .roarieQ{margin:14px 0 2px;color:var(--navy);font-weight:700;font-size:16px;}
+  .roarieSub{font-size:11.5px;color:var(--muted);margin-bottom:10px;}
+  .enterMealSub{font-size:13px;color:var(--muted);margin:6px 0 16px;}
 
   .roarieLog{display:flex;flex-direction:column;gap:10px;margin-top:16px;}
   .roarieTurn{display:flex;flex-direction:column;gap:10px;}
-  .roarieMsg{font-family:"Helvetica Neue",Arial,sans-serif;font-size:13.5px;line-height:1.45;padding:9px 14px;border-radius:14px;max-width:85%;}
-  .roarieMsg.user{align-self:flex-end;background:var(--navy);color:#fff;}
-  .roarieMsg.bot{align-self:flex-start;background:rgba(156,209,232,.25);color:var(--ink);}
+  .roarieMsg{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13.5px;line-height:1.45;padding:9px 14px;border-radius:14px;max-width:85%;}
+  .roarieMsg.user{align-self:flex-end;background:var(--navy);color:var(--primary-fg);}
+  .roarieMsg.bot{align-self:flex-start;background:rgba(184,212,232,.25);color:var(--ink);}
   .roarieCards{display:flex;flex-direction:column;gap:12px;}
 
   .resultCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;display:flex;gap:14px;cursor:pointer;}
   .resultCard:hover{border-color:var(--navy);}
   .resultCard .num{font-size:20px;color:var(--gold);font-weight:600;min-width:24px;}
   .resultCard h4{margin:0 0 3px;color:var(--navy);font-size:16px;}
-  .resultCard .meta{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;color:#8a8474;margin-bottom:4px;}
+  .resultCard .meta{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12px;color:var(--muted);margin-bottom:4px;}
   .resultCard p{margin:0 0 6px;font-size:13.5px;line-height:1.4;}
   .resultCard .menuItems{list-style:none;padding:0;margin:4px 0 0;font-size:13px;line-height:1.6;}
   .resultCard .menuItems li:before{content:"— ";color:var(--gold);}
-  .resultCard.cook{background:#FBF7EC;border-color:var(--gold);}
+  .resultCard.cook{background:var(--secondary);border-color:var(--gold);}
   .resultCard .price{font-weight:700;color:var(--navy);white-space:nowrap;}
 
-  .loading{text-align:center;font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;color:#8a8474;padding:20px;}
+  .loading{text-align:center;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;color:var(--muted);padding:20px;}
 
   /* ---- Modal ---- */
   .overlay{position:fixed;inset:0;background:rgba(0,20,40,.4);display:none;align-items:center;justify-content:center;z-index:50;}
@@ -132,28 +159,28 @@
   .modal{background:var(--card);border-radius:14px;padding:26px 28px;max-width:340px;width:90%;text-align:center;}
   .modal h3{margin-top:0;color:var(--navy);}
   .counter{display:flex;align-items:center;justify-content:center;gap:16px;margin:18px 0;}
-  .counter button{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font-size:18px;}
-  .counter .n{font-size:28px;min-width:36px;font-weight:600;color:var(--navy);}
-  .modal input[type=number]{width:100%;padding:10px;font-size:16px;border:1.5px solid var(--line);border-radius:8px;margin:14px 0;font-family:"Helvetica Neue",Arial,sans-serif;}
+  .counter button{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--navy);background:var(--card);color:var(--navy);font-size:18px;}
+  .counter .n{font-family:var(--font-display);font-size:28px;min-width:36px;font-weight:700;color:var(--navy);}
+  .modal input[type=number]{width:100%;padding:10px;font-size:16px;border:1.5px solid var(--line);border-radius:8px;margin:14px 0;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;background:var(--card);color:var(--ink);}
   .modal .row{display:flex;gap:8px;justify-content:center;margin-top:10px;}
 
   /* ---- Help modal ---- */
   .helpModal{max-width:560px;text-align:left;max-height:85vh;overflow-y:auto;}
   .helpModal h3{text-align:center;}
   .helpSection{margin-bottom:18px;}
-  .helpSection h4{margin:0 0 6px;color:var(--navy);font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.06em;}
+  .helpSection h4{margin:0 0 6px;color:var(--navy);font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.06em;}
   .helpSection p{margin:0;font-size:14px;line-height:1.5;color:var(--ink);}
-  .helpPlaceholder{color:#8a8474;font-style:italic;}
+  .helpPlaceholder{color:var(--muted);font-style:italic;}
   .helpDivider{border:none;border-top:1px solid var(--line);margin:20px 0;}
   .helpChat{display:flex;flex-direction:column;gap:10px;}
   .helpChatLog{display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;padding:4px 2px;}
   .helpChatMsg{font-size:13px;line-height:1.4;padding:8px 12px;border-radius:12px;max-width:85%;}
-  .helpChatMsg.user{align-self:flex-end;background:var(--navy);color:#fff;}
-  .helpChatMsg.bot{align-self:flex-start;background:rgba(156,209,232,.25);color:var(--ink);}
-  .authField{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:8px;margin-bottom:10px;font-family:"Helvetica Neue",Arial,sans-serif;font-size:14px;}
-  .authSwitch{font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;color:var(--navy);cursor:pointer;text-decoration:underline;margin-top:8px;display:inline-block;}
-  .err{color:var(--danger);font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;margin-top:-4px;margin-bottom:8px;}
-  .info{color:#4a7a4a;font-family:"Helvetica Neue",Arial,sans-serif;font-size:12px;margin-top:-4px;margin-bottom:8px;}
+  .helpChatMsg.user{align-self:flex-end;background:var(--navy);color:var(--primary-fg);}
+  .helpChatMsg.bot{align-self:flex-start;background:rgba(184,212,232,.25);color:var(--ink);}
+  .authField{width:100%;padding:10px;border:1.5px solid var(--line);border-radius:8px;margin-bottom:10px;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:14px;background:var(--card);color:var(--ink);}
+  .authSwitch{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12px;color:var(--navy);cursor:pointer;text-decoration:underline;margin-top:8px;display:inline-block;}
+  .err{color:var(--danger);font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12px;margin-top:-4px;margin-bottom:8px;}
+  .info{color:var(--success);font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12px;margin-top:-4px;margin-bottom:8px;}
 
   /* ---- Breakdown page ---- */
   #breakdownPage{display:none;}
@@ -162,36 +189,36 @@
   .backBtn{margin-bottom:16px;}
   .statGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:30px;}
   .statCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;text-align:center;}
-  .statCard .val{font-size:32px;color:var(--navy);font-weight:600;}
-  .statCard .lbl{font-family:"Helvetica Neue",Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:#8a8474;margin-top:4px;}
+  .statCard .val{font-family:var(--font-display);font-size:32px;color:var(--navy);font-weight:700;}
+  .statCard .lbl{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-top:4px;}
   .chartBlock{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;margin-bottom:22px;}
-  .chartBlock h4{margin:0 0 12px;color:var(--navy);font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.06em;}
+  .chartBlock h4{margin:0 0 12px;color:var(--navy);font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;text-transform:uppercase;letter-spacing:.06em;}
   .scrollBars{display:flex;gap:14px;overflow-x:auto;padding-bottom:6px;}
-  .barCol{display:flex;flex-direction:column;align-items:center;min-width:48px;font-family:"Helvetica Neue",Arial,sans-serif;}
-  .barTrack{height:140px;width:26px;display:flex;align-items:flex-end;background:#EFEAE0;border-radius:4px;overflow:hidden;}
+  .barCol{display:flex;flex-direction:column;align-items:center;min-width:48px;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;}
+  .barTrack{height:140px;width:26px;display:flex;align-items:flex-end;background:var(--secondary);border-radius:4px;overflow:hidden;}
   .bar{width:100%;background:var(--navy);border-radius:4px 4px 0 0;}
-  .bar.target{background:repeating-linear-gradient(45deg,var(--gold),var(--gold) 4px,#fff 4px,#fff 8px);}
+  .bar.target{background:repeating-linear-gradient(45deg,var(--gold),var(--gold) 4px,var(--secondary) 4px,var(--secondary) 8px);}
   .barVal{font-size:10.5px;margin-top:4px;color:var(--ink);}
-  .barLbl{font-size:9.5px;color:#8a8474;margin-top:2px;text-align:center;}
+  .barLbl{font-size:9.5px;color:var(--muted);margin-top:2px;text-align:center;}
   .pieWrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
-  .legend{font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;}
+  .legend{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;}
   .legend div{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
   .sw{width:12px;height:12px;border-radius:3px;}
-  .configWarning{background:#FDEDEA;border:1px solid var(--danger);color:var(--danger);font-family:"Helvetica Neue",Arial,sans-serif;font-size:13px;padding:12px 16px;border-radius:8px;margin-bottom:18px;}
+  .configWarning{background:var(--danger-bg);border:1px solid var(--danger);color:var(--danger);font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;padding:12px 16px;border-radius:8px;margin-bottom:18px;}
 
   /* ---- Dining plan options ---- */
   .planOptions{display:flex;flex-direction:column;gap:8px;max-height:260px;overflow-y:auto;margin:14px 0;text-align:left;}
-  .planOptionBtn{width:100%;font-family:"Helvetica Neue",Arial,sans-serif;text-align:left;border:1.5px solid var(--line);background:#fff;border-radius:10px;padding:8px 12px;cursor:pointer;transition:.15s;}
+  .planOptionBtn{width:100%;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;text-align:left;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:10px;padding:8px 12px;cursor:pointer;transition:.15s;}
   .planOptionBtn:hover{border-color:var(--navy);}
   .planOptionBtn.selected{border-color:var(--navy);background:var(--columbia-blue);}
   .planOptionBtn.custom{border-style:dashed;}
   .poName{font-weight:700;color:var(--navy);font-size:13px;}
-  .poMeta{font-size:11px;color:#8a8474;margin-top:2px;line-height:1.4;}
-  .planDivider{font-family:"Helvetica Neue",Arial,sans-serif;font-size:11px;color:#8a8474;text-align:center;margin:14px 0;text-transform:uppercase;letter-spacing:.05em;}
+  .poMeta{font-size:11px;color:var(--muted);margin-top:2px;line-height:1.4;}
+  .planDivider{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:11px;color:var(--muted);text-align:center;margin:14px 0;text-transform:uppercase;letter-spacing:.05em;}
   .settingsTabs{display:flex;gap:6px;margin-bottom:16px;}
-  .settingsTab{flex:1;font-family:"Helvetica Neue",Arial,sans-serif;font-size:12.5px;font-weight:600;padding:8px 10px;border-radius:8px;border:1.5px solid var(--line);background:#fff;color:#8a8474;cursor:pointer;}
+  .settingsTab{flex:1;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12.5px;font-weight:600;padding:8px 10px;border-radius:8px;border:1.5px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;}
   .settingsTab.active{border-color:var(--navy);color:var(--navy);background:var(--columbia-blue);}
-  select.authField{-webkit-appearance:none;appearance:none;background-color:#fff;}
+  select.authField{-webkit-appearance:none;appearance:none;background-color:var(--card);}
 </style>
 </head>
 <body>
@@ -209,14 +236,17 @@
         <div class="semesterLine">Days until semester end: <b id="semesterDays">--</b></div>
       </div>
       <div class="brand">
-        <h1>LionSwipe<span class="col-motif"><span></span><span></span><span></span></span></h1>
-        <div class="subtitle">Let the Lions feast</div>
+        <h1>LionSwipe<span class="brandIcon">&#129409;</span></h1>
+        <div class="subtitle">Track Every Meal</div>
+        <div class="brandButtons">
+          <button class="btn util" id="helpBtn">&#63; Help</button>
+          <button class="btn util" id="settingsBtn">&#9881; Profile</button>
+          <button class="btn util" id="themeToggleBtn">&#9789; Dark</button>
+        </div>
       </div>
       <div class="headerRight">
         <button class="btn solid util" id="loginBtn">Log In</button>
         <div class="swipesBox" id="swipesSummary"></div>
-        <button class="btn util" id="helpBtn">&#63; Help</button>
-        <button class="btn util" id="settingsBtn">&#9881; Profile</button>
         <button class="btn danger util" id="deleteAccountBtn" style="display:none;">Delete Account</button>
         <button class="btn util" id="breakdownBtn">See Breakdown &rarr;</button>
       </div>
@@ -236,7 +266,7 @@
         <div class="notAppPanel roariePanel">
           <div class="notAppHeadRow">
             <h3>Ask Roarie for ideas</h3>
-            <button class="btn util" id="roarieNewChatBtn">New Chat</button>
+            <button class="btn util" id="roarieNewChatBtn">Reset Chat</button>
           </div>
           <h4 class="roarieQ">What do you feel like eating?</h4>
           <div class="roarieSub util">Enter cravings, meal ideas, or what you don't want to eat</div>
@@ -266,7 +296,7 @@
   <!-- ================= BREAKDOWN PAGE ================= -->
   <div id="breakdownPage">
     <button class="btn backBtn util" id="backBtn">&larr; Back to LionSwipe</button>
-    <h2 style="color:var(--navy);font-weight:400;">Your Breakdown</h2>
+    <h2 style="color:var(--navy);font-weight:800;">Your Breakdown</h2>
     <div class="statGrid" id="statGrid"></div>
     <div class="chartBlock">
       <h4>Meal Swipes Used / Week &mdash; scroll for history &amp; target pace</h4>
@@ -304,7 +334,7 @@
 <div class="overlay" id="swipeOverlay">
   <div class="modal">
     <h3 id="swipeHallName">Ferris</h3>
-    <p class="util" style="font-size:13px;color:#8a8474;">Count this as a meal swipe</p>
+    <p class="util" style="font-size:13px;color:var(--muted);">Count this as a meal swipe</p>
     <div class="counter">
       <button id="swipeMinus">&minus;</button>
       <div class="n" id="swipeCount">1</div>
@@ -319,9 +349,9 @@
 
 <div class="overlay" id="spendOverlay">
   <div class="modal">
-    <p class="util" style="font-size:13px;color:#8a8474;">Where did you eat?</p>
+    <p class="util" style="font-size:13px;color:var(--muted);">Where did you eat?</p>
     <input class="authField" id="spendPlaceName" placeholder="e.g. Chipotle">
-    <p class="util" style="font-size:13px;color:#8a8474;">How much did you spend?</p>
+    <p class="util" style="font-size:13px;color:var(--muted);">How much did you spend?</p>
     <input type="number" id="spendAmount" placeholder="$0.00" step="0.01">
     <div class="row">
       <button class="btn solid" id="spendConfirm">Log Meal</button>
@@ -340,38 +370,38 @@
     </div>
 
     <div id="planTabPanel">
-      <p style="font-size:13px;color:#8a8474;">Select your plan below, or enter it manually. Full details at <a href="https://dining.columbia.edu/student-dining-plans" target="_blank" rel="noopener">dining.columbia.edu/student-dining-plans</a>.</p>
+      <p style="font-size:13px;color:var(--muted);">Select your plan below, or enter it manually. Full details at <a href="https://dining.columbia.edu/student-dining-plans" target="_blank" rel="noopener">dining.columbia.edu/student-dining-plans</a>.</p>
       <div class="info" id="planRolloverNote" style="display:none;"></div>
 
       <div class="planOptions util" id="planOptions"></div>
 
       <div class="planDivider">or enter manually</div>
 
-      <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Plan name (optional)</label>
+      <label style="display:block;text-align:left;font-size:12px;color:var(--muted);margin-bottom:4px;">Plan name (optional)</label>
       <input class="authField" id="planName" placeholder="e.g. Plan B">
 
-      <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Total swipes for the semester</label>
+      <label style="display:block;text-align:left;font-size:12px;color:var(--muted);margin-bottom:4px;">Total swipes for the semester</label>
       <input class="authField" id="planTotalSwipes" type="number" min="0" placeholder="e.g. 175">
 
-      <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Swipes per week (target pace)</label>
+      <label style="display:block;text-align:left;font-size:12px;color:var(--muted);margin-bottom:4px;">Swipes per week (target pace)</label>
       <input class="authField" id="planWeeklyAllowance" type="number" min="0" placeholder="e.g. 14">
-      <p style="font-size:11px;color:#8a8474;text-align:left;margin-top:-4px;">Only know one? Fill in whichever you have — the other can stay a rough estimate and you can edit it later from Profile in the header. Leave both blank to skip the dining plan entirely.</p>
+      <p style="font-size:11px;color:var(--muted);text-align:left;margin-top:-4px;">Only know one? Fill in whichever you have — the other can stay a rough estimate and you can edit it later from Profile in the header. Leave both blank to skip the dining plan entirely.</p>
     </div>
 
     <div id="spendTabPanel" style="display:none;">
-      <p style="font-size:13px;color:#8a8474;">Set a target for how much you spend eating out, over whatever period works for you.</p>
+      <p style="font-size:13px;color:var(--muted);">Set a target for how much you spend eating out, over whatever period works for you.</p>
 
-      <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Amount</label>
+      <label style="display:block;text-align:left;font-size:12px;color:var(--muted);margin-bottom:4px;">Amount</label>
       <input class="authField" id="spendGoalAmount" type="number" min="0" step="0.01" placeholder="e.g. 50">
 
-      <label style="display:block;text-align:left;font-size:12px;color:#7a7568;margin-bottom:4px;">Per</label>
+      <label style="display:block;text-align:left;font-size:12px;color:var(--muted);margin-bottom:4px;">Per</label>
       <select class="authField" id="spendGoalPeriod">
         <option value="day">Day</option>
         <option value="week" selected>Week</option>
         <option value="month">Month</option>
         <option value="semester">Semester</option>
       </select>
-      <p style="font-size:11px;color:#8a8474;text-align:left;margin-top:-4px;">Leave the amount blank to skip / clear your spending goal.</p>
+      <p style="font-size:11px;color:var(--muted);text-align:left;margin-top:-4px;">Leave the amount blank to skip / clear your spending goal.</p>
     </div>
 
     <div class="err" id="planErr" style="display:none;"></div>
@@ -423,6 +453,26 @@
 <script src="config.js"></script>
 <script>
 (async function(){
+
+/* ---------------- Theme (light/dark) ---------------- */
+const THEME_KEY = 'lionswipe_theme';
+const themeToggleBtn = document.getElementById('themeToggleBtn');
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  themeToggleBtn.innerHTML = theme === 'dark' ? '&#9728; Light' : '&#9789; Dark';
+  // Pie chart colors are read from CSS vars at draw time, so re-render it if visible.
+  if(typeof renderBreakdown === 'function' && document.getElementById('breakdownPage').classList.contains('show')) renderBreakdown();
+}
+themeToggleBtn.onclick = ()=>{
+  const next = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+  localStorage.setItem(THEME_KEY, next);
+  applyTheme(next);
+};
+(function initTheme(){
+  const stored = localStorage.getItem(THEME_KEY);
+  const theme = stored || (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  applyTheme(theme);
+})();
 
 /* ---------------- Supabase setup ---------------- */
 const CFG = window.LIONSWIPE_CONFIG || {};
@@ -1410,12 +1460,12 @@ function drawPie(a,b){
     return `<path d="M${cx},${cy} L${x1},${y1} A${r},${r} 0 ${large} 1 ${x2},${y2} Z" fill="${color}"/>`;
   }
   let html = '';
-  html += arcPath(0, aAngle, '#00356B');
-  html += arcPath(aAngle, 360, '#C9A24B');
+  html += arcPath(0, aAngle, '#565486');
+  html += arcPath(aAngle, 360, '#B8D4E8');
   svg.innerHTML = html;
   document.getElementById('pieLegend').innerHTML = `
-    <div><span class="sw" style="background:#00356B;"></span>Dining Hall — ${a}</div>
-    <div><span class="sw" style="background:#C9A24B;"></span>Eating Out — ${b}</div>
+    <div><span class="sw" style="background:#565486;"></span>Dining Hall — ${a}</div>
+    <div><span class="sw" style="background:#B8D4E8;"></span>Eating Out — ${b}</div>
   `;
 }
 
