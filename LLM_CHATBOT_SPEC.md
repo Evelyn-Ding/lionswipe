@@ -1,4 +1,4 @@
-# LLM Chatbot — Product Spec
+# Product Requirements Document (for merge PR #1)
 
 ## What It Is
 A conversational, multi-turn food-recommendation chatbot for LionSwipe. It replaces the
