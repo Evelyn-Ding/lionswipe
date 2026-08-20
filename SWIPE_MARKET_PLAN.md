@@ -38,9 +38,11 @@ user's projected pace vs. their dining plan (see "Header nudge" below).
   `#mainPage` (same show/hide pattern as the existing Breakdown page).
 - "+ Post a Listing" opens `#listingOverlay`, a modal styled like the existing
   swipe-logging / spending-goal modals. Fields: I'm Selling / I'm Buying toggle,
-  quantity, price per swipe, **meeting location** (free text — deliberately *not*
-  a dropdown of dining halls, see "Design decisions" below), **meeting window
-  start/end** (two `datetime-local` inputs), optional note.
+  quantity, price per swipe, **payment methods** (multi-select toggle —
+  Venmo/PayPal/Cash/Zelle, at least one required), **meeting location** (free
+  text — deliberately *not* a dropdown of dining halls, see "Design decisions"
+  below), **meeting window start/end** (two `datetime-local` inputs), optional
+  note.
 - **No contact field.** Contact info is *always* the poster's own account email
   (`currentUser.email`), auto-filled at submit time — never typed in. The modal
   shows a read-only preview ("Your school email (X) is shown automatically").
@@ -51,18 +53,43 @@ user's projected pace vs. their dining plan (see "Header nudge" below).
   also enforced at the database level (`swipe_listings` check constraint), so it
   can't be bypassed by calling Supabase directly.
 - Inserts a row into `swipe_listings` with `contact_email` set from the session.
+  `payment_methods` (`text[]`) is enforced non-empty and restricted to
+  `venmo`/`paypal`/`cash`/`zelle` at the DB level too (check constraint), same
+  belt-and-suspenders pattern as `contact_email`. It's snapshotted onto the
+  `swipe_matches` row at claim time (see `claim_swipe_listing()`) so both
+  sides still see it after the listing's quantity/status changes.
 
 ### Browsing
-- Three tabs originally, now four: **Buy Swipes** (other people's `sell`
-  listings, cheapest-per-swipe first), **Sell Swipes** (other people's `buy`
-  listings — i.e. people who want to buy from you — highest-offer first), **My
-  Listings** (your own, any status), **Matches** (new — see below).
+- Four tabs: **Buy Swipes** (other people's `sell` listings, cheapest-per-swipe
+  first), **Sell Swipes** (other people's `buy` listings — i.e. people who want
+  to buy from you — highest-offer first), **My History**, **Matches** (see
+  below).
 - Listings whose meeting window has already passed (`meeting_end < now`) are
   filtered out of Buy/Sell entirely — not actionable for a browser. They still
-  show up under My Listings with a red "Expired" tag (see "Expiry" below).
+  show up under My History with a red "Expired" tag (see "Expiry" below).
 - Each non-own card shows the poster's email, quantity, price, total, note, and
   the meeting location + formatted window. Non-own active/unexpired cards get a
   `.claimable` class and `cursor:pointer` — the whole card is clickable.
+
+### My History
+- Originally "My Listings" (just your own posted listings, any status) — renamed
+  and expanded so someone who has only ever *claimed* from other people, and
+  never posted a listing themselves, still has something meaningful here
+  instead of a permanently empty tab.
+- `renderHistoryGrid()` (index.html) merges two sources, both already loaded
+  client-side (no extra query): `marketListings` filtered to your own
+  (`user_id === myId`, rendered by `renderMyListingCard()` — Active/Completed/
+  Expired status, Mark Complete/Delete buttons, unchanged from the old "My
+  Listings" behavior) and `marketMatches` filtered to ones where you're the
+  **claimer** (rendered by `renderMyClaimCard()` — a claim's status here is
+  derived, not stored: `cancelled` if the match was cancelled, `Completed` if
+  its meeting window has already passed, otherwise `Active Agreement` with the
+  same green highlight as the Matches tab). Both sets are merged and sorted by
+  `created_at` into one chronological feed.
+- Deliberately read-only — no Message/Cancel buttons here even for active
+  claims, to avoid duplicating controls that already live on the **Matches**
+  tab (which itself covers *both* poster- and claimer-side active/cancelled
+  agreements). My History is the ledger; Matches is where you act on it.
 
 ### Claiming (the "click to confirm" flow)
 - Clicking a claimable card opens `#claimOverlay` — this reuses the exact same
@@ -79,16 +106,50 @@ user's projected pace vs. their dining plan (see "Header nudge" below).
      `active`, hasn't expired, isn't the claimer's own listing, and the requested
      quantity doesn't exceed what's left. The row lock is what prevents two
      people from simultaneously claiming more swipes than actually exist.
-  3. Inserts a row into `swipe_matches` snapshotting both emails, the quantity,
-     price, location, and meeting window.
-  4. If the claim used up all remaining quantity, sets the listing's `status` to
+  3. Inserts one `meal_logs` row (`type='hall'`) for the poster and one for the
+     claimer, both `swipes = p_quantity` and dated to the listing's
+     `meeting_start` (not claim time) — see "Swipe usage" below for why.
+  4. Inserts a row into `swipe_matches` snapshotting both emails, the quantity,
+     price, payment methods, location, meeting window, and the two `meal_logs`
+     ids from step 3 (`poster_meal_log_id`/`claimer_meal_log_id` — needed so
+     `cancel_swipe_match()` can find and delete them again).
+  5. If the claim used up all remaining quantity, sets the listing's `status` to
      `'completed'`. Otherwise decrements `quantity` in place (so "quantity" on an
      active listing always means "remaining", not "originally posted").
 - On success, the claimer immediately sees a "You're connected!" screen with the
-  poster's email, quantity, price, and meeting details. The listing/matches are
-  reloaded so the grid reflects the new remaining quantity.
+  poster's email, quantity, price, and meeting details. The listing/matches/logs
+  are reloaded so the grid and the main dashboard's swipe count both reflect it
+  right away.
+
+### Swipe usage
+- Both sides of a claim count as "swipes used," not just the buyer: the seller
+  physically swipes their card `p_quantity` times at the meetup (those swipes
+  are gone from their plan whether or not they personally eat), and the buyer
+  gets `p_quantity` meals without touching their own plan's balance at all —
+  both are genuine dining-hall visits, so both get logged as one. This is what
+  makes Swipe Market activity show up in `usedSemester`/"Swipes Used" on the
+  main dashboard and Breakdown page for both people, same as any manually
+  logged swipe.
+- Logged optimistically at claim time (dated to `meeting_start`, so it lands in
+  the right week even though the meetup hasn't happened yet) — same
+  eager-commit philosophy as the listing quantity/status update. If the
+  agreement is cancelled before the meetup, `cancel_swipe_match()` deletes both
+  `meal_logs` rows again via the ids stored on the match, and each acting
+  user's own `logs`/dashboard is refreshed immediately (`refreshLogs()` in
+  `confirmClaim()`/`cancelAgreement()`, index.html) — the other participant
+  sees it next time they load their own data, same no-realtime limitation as
+  the rest of the app.
+- The log's `name` is `'Swipe Market: ' || meeting_location` so it's
+  identifiable if ever surfaced in a log list — though as of this writing
+  nothing in index.html actually renders individual `meal_logs` rows by name,
+  only aggregates (`usedSemester`, the weekly bar chart), so this is mostly
+  for anyone querying the table directly.
 - The **poster** finds out by checking the **Matches** tab next time they open
   the app — there is no push notification or email (see "Design decisions").
+  Partial claims work the same way as full ones: claiming 3 of a 10-swipe
+  listing creates one `swipe_matches` row for those 3 (so that claimer can
+  message the poster about their piece — see "Messaging" below) while the
+  listing stays live with `quantity=7` for anyone else to claim from.
 
 ### Matches tab
 - New 4th tab. Queries `swipe_matches` (RLS already restricts results to rows
@@ -100,13 +161,55 @@ user's projected pace vs. their dining plan (see "Header nudge" below).
   match row on its own doesn't otherwise tell you which side of the trade the
   poster was on.
 
+### Messaging
+- Each `swipe_matches` row can have a chat thread, `swipe_messages`
+  (`match_id`, `sender_id`, `recipient_id`, `body`, `is_system`, `read_at`).
+  Post-claim only — there's no pre-claim negotiation with a poster before
+  claiming; you connect by claiming, then talk.
+- Every card under **Matches** gets a **Message** button opening
+  `#messageOverlay`: a scrollable bubble list (your messages right-aligned in
+  navy, theirs left-aligned in the secondary card color, system notices
+  centered/muted) plus a text input. No realtime — messages are (re)loaded
+  each time the thread is opened, same polling-on-open approach as the rest
+  of Swipe Market.
+- Unread count (`read_at is null and recipient_id = me`) shows as a small
+  badge on the **Matches** tab pill itself; opening a thread marks its
+  messages read and clears the count. This is the app's whole notification
+  story for messages — still no email/push (see "Design decisions").
+- `is_system` messages (currently just the "X cancelled this agreement" note
+  — see "Cancelling an agreement") can only be inserted by
+  `cancel_swipe_match()` (`security definer`); the regular insert RLS policy
+  forces `is_system = false` on anything a user sends directly, so a
+  system-styled bubble in the UI is always trustworthy.
+
+### Cancelling an agreement
+- Either participant can back out of an active match before the meetup
+  happens. Each **Matches** card shows a **Cancel** button (active agreements
+  only — cancelled ones show a greyed-out "Cancelled" tag instead) that
+  confirms first, then calls `cancel_swipe_match(p_match_id)`.
+- That function (`security definer`, schema.sql): checks the caller is
+  actually `poster_id` or `claimer_id` and the match is still `'active'`,
+  flips `swipe_matches.status` to `'cancelled'`, **restores the claimed
+  quantity back onto the listing** (`quantity += match.quantity`) and
+  reactivates it (`status = 'active'`) if claiming this match had marked it
+  `'completed'` — so those swipes are buyable/sellable by someone else again.
+  It's a no-op on the listing side if the poster already deleted it
+  (`listing_id` went `null` via `on delete set null`).
+- "Both people are notified" by inserting an `is_system` message into their
+  shared thread — no email, consistent with the rest of the app (see
+  "Design decisions").
+- Active/cancelled here is a `swipe_matches`-level concept, separate from
+  `swipe_listings.status` (still just `active`/`completed`, see the design
+  decision below) — cancelling a match never deletes it, so the chat history
+  and the fact it happened stay visible to both people.
+
 ### Expiry
 - No cron job / server-side status flip. `isExpired(l)` (index.html) just
   compares `meeting_end` to `new Date()` at render time, same lightweight
   approach the rest of the app already uses for pace/projection math.
 - If a signed-in user has any of their own **active** listings that are expired,
   a red banner appears at the top of the Swipe Market page (reusing the existing
-  `.configWarning` style) telling them how many and to check My Listings.
+  `.configWarning` style) telling them how many and to check My History.
 
 ### Header nudge ("Buy extra swipes here!" / "Sell extra swipes here!")
 - `updateMarketNudge()` (index.html, ~line 1462), called at the end of the
@@ -129,7 +232,10 @@ user's projected pace vs. their dining plan (see "Header nudge" below).
   people already have accounts, doing the whole "connect two people" job inside
   Supabase via `swipe_matches` + one RPC function needed zero new infrastructure
   and zero new secrets. The tradeoff is polling instead of push — acceptable
-  since the app has no notification system at all elsewhere either.
+  since the app has no notification system at all elsewhere either. Same call
+  applies to messaging and cancellation: new messages surface as an unread
+  badge on the Matches tab, and a cancellation surfaces as a system message in
+  the thread — both in-app only, no email.
 - **Meeting location is free text, not a dropdown of dining halls.** Dining hall
   names in this app come dynamically from `/api/menus` at runtime (there's no
   static `HALLS` constant to reuse), and hand-typing a hardcoded list risked
@@ -148,7 +254,11 @@ user's projected pace vs. their dining plan (see "Header nudge" below).
 - **Listing status is only `active`/`completed`**, no `cancelled`. Earlier in
   development a `cancelled` status existed but was removed because nothing in
   the UI ever set it — dead code. If you want an explicit "withdraw without
-  fulfilling" action later, that's the value to reintroduce.
+  fulfilling" action later, that's the value to reintroduce. Note this is
+  distinct from `swipe_matches.status` (`active`/`cancelled`), added later for
+  the "cancel an agreement" flow — a listing can't be cancelled directly, only
+  deleted (if unclaimed) or effectively reopened by cancelling the match that
+  had reduced its quantity.
 - **Known overlap gap**: if a listing with quantity > 1 gets claimed by multiple
   different people in pieces, every resulting match shares the *same* meeting
   location/window from the original listing (there's no per-claim scheduling).
@@ -156,12 +266,14 @@ user's projected pace vs. their dining plan (see "Header nudge" below).
 
 ## Setup required before any of this works for real
 
-1. **Run `schema.sql` in the Supabase SQL editor.** The `swipe_listings`,
-   `swipe_matches` tables and the `claim_swipe_listing()` function don't exist in
-   the real project yet — only in this file. If `swipe_listings` was somehow
-   already created from an earlier iteration, don't just re-run the `create
-   table` — see the commented-out `alter table` migration block right after it
-   (around line 198) instead.
+1. **Run `schema.sql` in the Supabase SQL editor** (or the standalone
+   `swipe_market_schema.sql` extract — kept byte-for-byte in sync with
+   schema.sql's Swipe Market section, see its own header). Creates
+   `swipe_listings`, `swipe_matches`, `swipe_messages`, and the
+   `claim_swipe_listing()` / `cancel_swipe_match()` functions — none of this
+   exists in the real project yet. If `swipe_listings` was somehow already
+   created from an earlier iteration, don't just re-run the `create table` —
+   see the commented-out `alter table` migration block right after it instead.
 2. **Turn off the local-preview login bypass.** Near the top of the Swipe Market
    JS block, `index.html` currently has:
    ```js
@@ -197,9 +309,14 @@ user's projected pace vs. their dining plan (see "Header nudge" below).
 
 - **Editing a listing.** Only Delete exists for an owner's active listing; no
   edit-in-place. Workaround is delete-and-repost.
-- **Withdrawing/cancelling a listing distinct from completing it** (see
-  "cancelled" status note above).
-- **Any notification beyond the in-app Matches tab** (no email, no push).
+- **Cancelling a listing directly** (as opposed to cancelling the match formed
+  from it, which does exist — see "Cancelling an agreement"). An unclaimed
+  listing can still only be deleted, not "cancelled" with a reason/notice.
+- **Pre-claim negotiation.** Messaging only exists after a claim creates a
+  match; you can't message a poster before claiming to negotiate price or
+  quantity first.
+- **Any notification beyond in-app** (unread badge for messages, system
+  message for cancellations) — still no email, no push.
 - **Mobile-narrow-viewport testing** — layout uses flex-wrap and should adapt,
   but hasn't been specifically checked below ~768px.
 - **Automated tests** — this repo has no test suite anywhere (consistent with

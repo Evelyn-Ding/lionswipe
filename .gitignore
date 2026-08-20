@@ -19,3 +19,8 @@ node_modules/
 # scripts/scrape-menus.js debug dumps (HTML/screenshots of the target page)
 scripts/scrape-output/
 .env*
+
+# Hackathon demo account setup notes (contains a login password) — delete once done
+DEMO_ACCOUNT_REVERT.md
+seed_demo_account.sql
+swipe_market_schema.sql
