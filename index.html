@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700;800&family=Figtree:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
-    --navy:#565486;
+    --navy:#415283;
     --columbia-blue:#B8D4E8;
     --cream:#FFFFFF;
     --ink:#1F2937;
@@ -60,7 +60,7 @@
   .brand h1{margin:0;font-size:40px;font-weight:800;letter-spacing:-.01em;color:var(--navy);}
   .brand .subtitle{font-family:var(--font-body);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-top:2px;}
   .brandButtons{display:flex;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap;}
-  .brandIcon{display:inline-block;vertical-align:middle;margin-left:10px;font-size:0.75em;}
+  /* .brandIcon{display:inline-block;vertical-align:middle;margin-left:0;height:1.5em;width:auto;} */
 
   .headerRight{flex:1 1 0;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:10px;min-width:190px;}
   button{font-family:inherit;cursor:pointer;}
@@ -240,7 +240,7 @@
         <div class="semesterLine">Days until semester end: <b id="semesterDays">--</b></div>
       </div>
       <div class="brand">
-        <h1>LionSwipe<span class="brandIcon">&#129409;</span></h1>
+        <h1>LionSwipe<!-- <img class="brandIcon" src="assets/lion-logo.png" alt="LionSwipe lion logo"> --></h1>
         <div class="subtitle">Track Every Meal</div>
         <div class="brandButtons">
           <button class="btn util" id="helpBtn">&#63; Help</button>
