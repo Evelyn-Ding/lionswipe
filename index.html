@@ -58,11 +58,12 @@
   .clock .time{font-size:20px;font-weight:600;display:block;margin-top:2px;letter-spacing:0;text-transform:none;}
   .semesterLine{margin-top:8px;font-size:11.5px;color:var(--muted);text-transform:none;letter-spacing:0;}
   .semesterLine b{color:var(--navy);}
-  .marketNudge{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:11.5px;font-weight:600;margin-top:6px;max-width:200px;line-height:1.4;color:var(--muted);}
+  .marketNudge{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:11.5px;font-weight:600;margin:6px auto 0;max-width:200px;line-height:1.4;color:var(--muted);}
   .brand{text-align:center;flex:1;}
   .brand h1{margin:0;font-size:40px;font-weight:800;letter-spacing:-.01em;color:var(--navy);}
   .brand .subtitle{font-family:var(--font-body);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-top:2px;}
   .brandButtons{display:flex;justify-content:center;gap:8px;margin-top:12px;flex-wrap:wrap;}
+  .marketNudgeWrap{margin-top:10px;}
   /* .brandIcon{display:inline-block;vertical-align:middle;margin-left:0;height:1.5em;width:auto;} */
 
   .headerRight{flex:1 1 0;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:10px;min-width:190px;}
@@ -289,11 +290,9 @@
           Columbia Time (ET)
           <span class="time" id="clockTime">--:--</span>
           <div id="clockDate"></div>
-          <div class="semesterLine">Days until semester end: <b id="semesterDays">--</b></div>
-        </div>
-        <div>
-          <button class="btn util" id="marketBtn">Swipe Market &rarr;</button>
-          <div class="marketNudge util">Buy and sell swipes here!</div>
+          <div class="semesterLine">Semester: <b id="semesterTerm">--</b></div>
+          <div class="semesterLine">Weeks total in semester: <b id="semesterWeeksTotal">--</b></div>
+          <div class="semesterLine">Weeks until semester end: <b id="semesterWeeksLeft">--</b></div>
         </div>
       </div>
       <div class="brand">
@@ -303,6 +302,10 @@
           <button class="btn util" id="helpBtn">&#63; Help</button>
           <button class="btn util" id="settingsBtn">&#9881; Profile</button>
           <button class="btn util" id="themeToggleBtn">&#9789; Dark</button>
+        </div>
+        <div class="marketNudgeWrap">
+          <button class="btn solid util" id="marketBtn">Swipe Market &rarr;</button>
+          <div class="marketNudge util">Buy and sell swipes here!</div>
         </div>
       </div>
       <div class="headerRight">
