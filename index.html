@@ -187,6 +187,7 @@
   #breakdownPage.show{display:block;}
   #mainPage.hide{display:none;}
   .backBtn{margin-bottom:16px;}
+  .breakdownSub{font-size:11px;letter-spacing:.04em;color:var(--muted);margin-bottom:18px;}
   .statGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:30px;}
   .statCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;text-align:center;}
   .statCard .val{font-family:var(--font-display);font-size:32px;color:var(--navy);font-weight:700;}
@@ -203,7 +204,10 @@
   .pieWrap{display:flex;align-items:center;gap:24px;flex-wrap:wrap;}
   .legend{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;}
   .legend div{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
-  .sw{width:12px;height:12px;border-radius:3px;}
+  .sw{width:12px;height:12px;border-radius:3px;flex-shrink:0;}
+  .sw.target{background:repeating-linear-gradient(45deg,var(--gold),var(--gold) 3px,var(--secondary) 3px,var(--secondary) 6px);}
+  .chartLegend{display:flex;gap:16px;flex-wrap:wrap;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:11px;color:var(--muted);margin:-2px 0 14px;}
+  .chartLegend div{display:flex;align-items:center;gap:6px;}
   .configWarning{background:var(--danger-bg);border:1px solid var(--danger);color:var(--danger);font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;padding:12px 16px;border-radius:8px;margin-bottom:18px;}
 
   /* ---- Dining plan options ---- */
@@ -296,14 +300,24 @@
   <!-- ================= BREAKDOWN PAGE ================= -->
   <div id="breakdownPage">
     <button class="btn backBtn util" id="backBtn">&larr; Back to LionSwipe</button>
-    <h2 style="color:var(--navy);font-weight:800;">Your Breakdown</h2>
+    <h2 style="color:var(--navy);font-weight:800;margin-bottom:2px;">Your Breakdown</h2>
+    <div class="breakdownSub util" id="breakdownSub"></div>
     <div class="statGrid" id="statGrid"></div>
     <div class="chartBlock">
       <h4>Meal Swipes Used / Week &mdash; scroll for history &amp; target pace</h4>
+      <div class="chartLegend">
+        <div><span class="sw" style="background:var(--navy);"></span>Swipes used</div>
+        <div><span class="sw target"></span>Target pace needed to use up your plan by semester end</div>
+      </div>
       <div class="scrollBars" id="swipeChart"></div>
     </div>
+    <div class="statGrid" id="statGrid2"></div>
     <div class="chartBlock">
-      <h4>Money Spent / Week &mdash; scroll for history</h4>
+      <h4>Money Spent / Week &mdash; scroll for history &amp; target pace</h4>
+      <div class="chartLegend">
+        <div><span class="sw" style="background:var(--gold);"></span>Spent eating out</div>
+        <div><span class="sw target"></span>Target spend to hit your spending goal</div>
+      </div>
       <div class="scrollBars" id="moneyChart"></div>
     </div>
     <div class="chartBlock">
@@ -1241,6 +1255,17 @@ if(supabase){
     await loadSpendGoal();
     await loadRoarieChat();
   });
+} else {
+  // No Supabase project configured (e.g. local preview with an empty config.js) —
+  // there's no auth session to wait on, so hydrate guest data from localStorage
+  // directly here. Without this, logs/plan/spend-goal/chat all reset on every
+  // reload despite being saved correctly, since the calls above never run.
+  logs = loadGuestLogs();
+  userPlan = loadGuestPlan();
+  spendGoal = loadGuestSpendGoal();
+  roarieMessages = loadGuestRoarieChat();
+  renderRoarieLog();
+  updateSwipesSummary();
 }
 
 function updateLoginBtn(){
@@ -1282,9 +1307,9 @@ function updateSwipesSummary(){
   // left of the plan by SEMESTER_END — remaining swipes divided by remaining
   // weeks (rounded up so you don't undershoot and run past the semester with
   // swipes unused). Recomputed on every log, so it rises if you fall behind and
-  // drops as you catch up — not a fixed weekly allowance.
-  const weeksRemaining = Math.max(1, Math.ceil((SEMESTER_END - now) / (7*24*3600*1000)));
-  const weekNeeded = userPlan ? Math.ceil(left / weeksRemaining) : '—';
+  // drops as you catch up — not a fixed weekly allowance. Shared with the
+  // Breakdown page (swipesPerWeekNeeded) so the two numbers always agree.
+  const weekNeeded = userPlan ? swipesPerWeekNeeded(left, now.getTime()) : '—';
 
   // Spending goal progress: recompute "spent" over whatever period the goal is
   // set for (day/week/month/semester) — only rendered at all when a goal is set,
@@ -1360,29 +1385,67 @@ function logsThisPeriod(period){
   return logs.filter(l=>l.ts>=periodCutoff(period));
 }
 
+const WEEK_MS = 7*24*3600*1000;
+
+// Weeks left until SEMESTER_END, floored at 1 so pacing math never divides by zero.
+function weeksRemainingInSemester(now){
+  return Math.max(1, Math.ceil((SEMESTER_END - now) / WEEK_MS));
+}
+
+// Single source of truth for "swipes/week needed" — used by the header stat,
+// the Breakdown page's stat card, and the swipe chart's future target bars,
+// so all three always show the same number. Dynamic: recomputed from whatever
+// swipes are left right now divided by however many weeks remain, so it rises
+// if you fall behind pace and drops as you catch up.
+function swipesPerWeekNeeded(swipesLeftVal, now){
+  if(swipesLeftVal===null || swipesLeftVal===undefined) return null;
+  return Math.ceil(swipesLeftVal / weeksRemainingInSemester(now));
+}
+
+// The $/week you'd need to spend eating out, from now through the end of the
+// semester, for your *overall* semester average to land on the spending goal —
+// i.e. it corrects for whatever you've already over/underspent, rather than
+// just repeating the goal amount every future week.
+function spendPerWeekNeeded(now){
+  if(!spendGoal) return null;
+  const weeksPerPeriod = { day:1/7, week:1, month:4.33, semester:SEMESTER_WEEKS }[spendGoal.period];
+  const weeklyGoalAmount = spendGoal.amount / weeksPerPeriod;
+  const totalSemesterWeeks = Math.max(1, Math.ceil((SEMESTER_END - SEMESTER_START) / WEEK_MS));
+  const semesterBudget = weeklyGoalAmount * totalSemesterWeeks;
+  const spentSemesterSoFar = logsThisPeriod('semester').filter(l=>l.type==='out').reduce((s,l)=>s+l.amount,0);
+  const remainingBudget = Math.max(0, semesterBudget - spentSemesterSoFar);
+  return remainingBudget / weeksRemainingInSemester(now);
+}
+
 function renderBreakdown(){
   const now = Date.now();
   const weekLogs = logsThisPeriod('week');
   const monthLogs = logsThisPeriod('month');
+  const semesterLogs = logsThisPeriod('semester');
   const usedSemester = logs.filter(l=>l.type==='hall' && l.ts >= SEMESTER_START.getTime()).reduce((s,l)=>s+l.swipes,0);
   const swipesLeft = userPlan ? Math.max(0, userPlan.total_swipes - usedSemester) : null;
   const spentWeek = weekLogs.filter(l=>l.type==='out').reduce((s,l)=>s+l.amount,0);
   const spentMonth = monthLogs.filter(l=>l.type==='out').reduce((s,l)=>s+l.amount,0);
+  const spentSemester = semesterLogs.filter(l=>l.type==='out').reduce((s,l)=>s+l.amount,0);
+  const weekNeeded = swipesPerWeekNeeded(swipesLeft, now);
 
-  const spendGoalCard = spendGoal
-    ? (()=>{
-        const spentInGoalPeriod = logsThisPeriod(spendGoal.period).filter(l=>l.type==='out').reduce((s,l)=>s+l.amount,0);
-        const periodLabel = {day:'Day', week:'Week', month:'Month', semester:'Semester'}[spendGoal.period];
-        return statCard(`$${spentInGoalPeriod.toFixed(2)} / $${spendGoal.amount.toFixed(2)}`, `Spend Goal (${periodLabel})`);
-      })()
-    : '';
+  // Subtitle next to the page title: read-only summary of what's set in
+  // Profile (dining plan / spending goal), pulled from the same state that
+  // powers the header stats — "--" when nothing's been entered yet.
+  const planLabel = (userPlan && userPlan.plan_name) ? escapeHtml(userPlan.plan_name) : '--';
+  const goalLabel = spendGoal ? `$${spendGoal.amount.toFixed(2)} / ${spendGoal.period}` : '--';
+  document.getElementById('breakdownSub').innerHTML =
+    `DINING PLAN: ${planLabel} &nbsp;|&nbsp; SPENDING GOAL: ${goalLabel}`;
 
   document.getElementById('statGrid').innerHTML = `
     ${statCard(usedSemester,'Swipes Used')}
+    ${statCard(weekNeeded===null?'—':weekNeeded,'Swipes/Week Needed')}
     ${statCard(swipesLeft===null?'—':swipesLeft,'Swipes Left')}
     ${statCard('$'+spentWeek.toFixed(2),'Spent This Week')}
+  `;
+  document.getElementById('statGrid2').innerHTML = `
     ${statCard('$'+spentMonth.toFixed(2),'Spent This Month')}
-    ${spendGoalCard}
+    ${statCard('$'+spentSemester.toFixed(2),'Spent This Semester')}
   `;
 
   const weeks = {};
@@ -1393,48 +1456,62 @@ function renderBreakdown(){
     if(l.type==='out') weeks[wk].money += l.amount;
   });
   const thisWeekStart = startOfWeek(now).getTime();
-  const weekMs = 7*24*3600*1000;
-  const historyWeeks = 8;
-  const futureWeeks = 4;
-  let weekArr = [];
-  for(let i=historyWeeks-1;i>=0;i--){
-    const wk = thisWeekStart - i*weekMs;
-    weekArr.push({wk, ...(weeks[wk]||{swipes:0,money:0}), future:false});
-  }
-  // Same "pace needed to finish on time" math as the header's Swipes/week needed
-  // stat — real weeks left until SEMESTER_END, not a fixed lookahead window — so
-  // the two numbers always agree. Also caps how many future bars get drawn so the
-  // chart never projects target bars past the actual end of the semester.
-  const remainingSwipes = swipesLeft || 0;
-  const weeksRemaining = Math.max(1, Math.ceil((SEMESTER_END - now) / weekMs));
-  const targetPerWeek = Math.max(1, Math.ceil(remainingSwipes / weeksRemaining));
-  const futureWeeksToShow = Math.min(futureWeeks, weeksRemaining);
-  for(let i=1;i<=futureWeeksToShow;i++){
-    const wk = thisWeekStart + i*weekMs;
-    weekArr.push({wk, swipes:targetPerWeek, money:0, future:true});
+
+  // History is clipped to how many weeks have actually elapsed since
+  // SEMESTER_START (capped at an 8-week scrollback) — so a brand-new semester
+  // shows just the current week instead of 7 weeks of empty zero-bars before
+  // the semester even began. It grows by one bar each week that passes.
+  const semesterStartWeek = startOfWeek(SEMESTER_START.getTime()).getTime();
+  const weeksSinceStart = Math.max(1, Math.floor((thisWeekStart - semesterStartWeek)/WEEK_MS) + 1);
+  const historyWeeksToShow = Math.min(8, weeksSinceStart);
+  let historyArr = [];
+  for(let i=historyWeeksToShow-1;i>=0;i--){
+    const wk = thisWeekStart - i*WEEK_MS;
+    historyArr.push({wk, ...(weeks[wk]||{swipes:0,money:0})});
   }
 
-  const maxSwipe = Math.max(...weekArr.map(w=>w.swipes),1);
+  // Future bars are recalculated fresh every render from swipesPerWeekNeeded /
+  // spendPerWeekNeeded (dynamic — see those functions), capped so target bars
+  // never get drawn past the actual end of the semester.
+  const weeksRemaining = weeksRemainingInSemester(now);
+  const futureWeeksToShow = Math.min(4, weeksRemaining);
+  const futureTsList = [];
+  for(let i=1;i<=futureWeeksToShow;i++) futureTsList.push(thisWeekStart + i*WEEK_MS);
+
+  const swipeTargetPerWeek = weekNeeded;
+  const swipeWeekArr = historyArr.map(w=>({wk:w.wk, val:w.swipes, future:false}));
+  if(userPlan){
+    futureTsList.forEach(wk=> swipeWeekArr.push({wk, val:swipeTargetPerWeek, future:true}));
+  }
+
+  const moneyTargetPerWeek = spendPerWeekNeeded(now);
+  const moneyWeekArr = historyArr.map(w=>({wk:w.wk, val:w.money, future:false}));
+  if(spendGoal){
+    futureTsList.forEach(wk=> moneyWeekArr.push({wk, val:moneyTargetPerWeek, future:true}));
+  }
+
+  const maxSwipe = Math.max(...swipeWeekArr.map(w=>w.val),1);
   const swipeChart = document.getElementById('swipeChart');
   swipeChart.innerHTML = '';
-  weekArr.forEach(w=>{
+  swipeWeekArr.forEach(w=>{
     const col = document.createElement('div'); col.className='barCol';
-    const h = Math.round((w.swipes/maxSwipe)*130);
+    const h = Math.round((w.val/maxSwipe)*130);
     col.innerHTML = `<div class="barTrack"><div class="bar${w.future?' target':''}" style="height:${h}px;"></div></div>
-      <div class="barVal">${w.swipes}</div>
+      <div class="barVal">${w.val}</div>
       <div class="barLbl">${fmtWeekLabel(w.wk)}${w.future?' (target)':''}</div>`;
     swipeChart.appendChild(col);
   });
 
-  const maxMoney = Math.max(...weekArr.filter(w=>!w.future).map(w=>w.money),1);
+  const maxMoney = Math.max(...moneyWeekArr.map(w=>w.val),1);
   const moneyChart = document.getElementById('moneyChart');
   moneyChart.innerHTML = '';
-  weekArr.filter(w=>!w.future).forEach(w=>{
+  moneyWeekArr.forEach(w=>{
     const col = document.createElement('div'); col.className='barCol';
-    const h = Math.round((w.money/maxMoney)*130);
-    col.innerHTML = `<div class="barTrack"><div class="bar" style="height:${h}px;background:var(--gold);"></div></div>
-      <div class="barVal">$${w.money.toFixed(0)}</div>
-      <div class="barLbl">${fmtWeekLabel(w.wk)}</div>`;
+    const h = Math.round((w.val/maxMoney)*130);
+    const barStyle = w.future ? `height:${h}px;` : `height:${h}px;background:var(--gold);`;
+    col.innerHTML = `<div class="barTrack"><div class="bar${w.future?' target':''}" style="${barStyle}"></div></div>
+      <div class="barVal">$${w.val.toFixed(0)}</div>
+      <div class="barLbl">${fmtWeekLabel(w.wk)}${w.future?' (target)':''}</div>`;
     moneyChart.appendChild(col);
   });
 
@@ -1443,6 +1520,9 @@ function renderBreakdown(){
   drawPie(hallMeals, outMeals);
 }
 function statCard(val,lbl){ return `<div class="statCard"><div class="val">${val}</div><div class="lbl util">${lbl}</div></div>`; }
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
 function fmtWeekLabel(ts){
   const d = new Date(ts);
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
