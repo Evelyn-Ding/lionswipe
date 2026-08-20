@@ -18,3 +18,4 @@ node_modules/
 
 # scripts/scrape-menus.js debug dumps (HTML/screenshots of the target page)
 scripts/scrape-output/
+.env*

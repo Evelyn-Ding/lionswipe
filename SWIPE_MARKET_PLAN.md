@@ -1,0 +1,216 @@
+# Swipe Market — handoff plan
+
+Branch: `swipe-market` (not yet merged, not yet pushed as of this writing).
+Nothing in this branch has been committed yet — it's all working-tree changes on
+top of `main`.
+
+## What this is
+
+A peer-to-peer meal-swipe marketplace inside LionSwipe, modeled loosely on
+[swipemarketcu.com](https://swipemarketcu.com/) but with a redesigned UI matching
+the rest of the app, and one important addition swipemarketcu.com doesn't have:
+**every listing requires a meeting location and time window**, because Columbia
+swipes can only physically change hands by one student swiping another in at a
+dining hall entrance — there's no remote/API transfer.
+
+Entry point: a "Swipe Market →" button in the top-left of the header, mirroring
+the "See Breakdown →" button's position in the top-right (`index.html`, the
+`.headerLeft` div, currently ~line 264). A small nudge line under that button
+reads "Buy extra swipes here!" or "Sell extra swipes here!" depending on the
+user's projected pace vs. their dining plan (see "Header nudge" below).
+
+## Files touched
+
+- **`schema.sql`** — appended `swipe_listings` table, `swipe_matches` table, and
+  the `claim_swipe_listing()` Postgres function (all at the bottom of the file,
+  after the existing `daily_menus` table). **This has not been run against the
+  real Supabase project yet** — see "Setup required" below.
+- **`index.html`** — everything else. This is a single-file app (no build step),
+  so all the CSS/HTML/JS for this feature lives inline in this one file. Look for
+  `/* ---- Swipe Market page ---- */` (CSS, ~line 195) and
+  `/* ---------------- Swipe Market page ---------------- */` (JS, ~line 1500)
+  as the main anchors. Everything Swipe-Market-related is grouped under those.
+
+## How it works end to end
+
+### Posting a listing
+- Header button → `#marketBtn` click handler → shows `#marketPage`, hides
+  `#mainPage` (same show/hide pattern as the existing Breakdown page).
+- "+ Post a Listing" opens `#listingOverlay`, a modal styled like the existing
+  swipe-logging / spending-goal modals. Fields: I'm Selling / I'm Buying toggle,
+  quantity, price per swipe, **meeting location** (free text — deliberately *not*
+  a dropdown of dining halls, see "Design decisions" below), **meeting window
+  start/end** (two `datetime-local` inputs), optional note.
+- **No contact field.** Contact info is *always* the poster's own account email
+  (`currentUser.email`), auto-filled at submit time — never typed in. The modal
+  shows a read-only preview ("Your school email (X) is shown automatically").
+- Validation (client-side in the `listingSubmit` handler, ~line 1868 in
+  `index.html`): quantity > 0, price ≥ 0, location non-empty, both meeting times
+  parse, meeting start isn't in the past, **meeting window is at least 15
+  minutes** (`meetEnd - meetStart >= 15*60000`). The same 15-minute minimum is
+  also enforced at the database level (`swipe_listings` check constraint), so it
+  can't be bypassed by calling Supabase directly.
+- Inserts a row into `swipe_listings` with `contact_email` set from the session.
+
+### Browsing
+- Three tabs originally, now four: **Buy Swipes** (other people's `sell`
+  listings, cheapest-per-swipe first), **Sell Swipes** (other people's `buy`
+  listings — i.e. people who want to buy from you — highest-offer first), **My
+  Listings** (your own, any status), **Matches** (new — see below).
+- Listings whose meeting window has already passed (`meeting_end < now`) are
+  filtered out of Buy/Sell entirely — not actionable for a browser. They still
+  show up under My Listings with a red "Expired" tag (see "Expiry" below).
+- Each non-own card shows the poster's email, quantity, price, total, note, and
+  the meeting location + formatted window. Non-own active/unexpired cards get a
+  `.claimable` class and `cursor:pointer` — the whole card is clickable.
+
+### Claiming (the "click to confirm" flow)
+- Clicking a claimable card opens `#claimOverlay` — this reuses the exact same
+  visual pattern as the existing "log a dining hall swipe" modal (`#swipeOverlay`,
+  the `.counter` class with −/+ buttons). If the listing has more than 1 swipe
+  available, a counter lets the claimer pick how many to claim (min 1, max
+  whatever's left); if it's exactly 1, the counter is hidden and the summary just
+  says "1 swipe."
+- Confirming calls `supabase.rpc('claim_swipe_listing', { p_listing_id, p_quantity })`.
+  That Postgres function (schema.sql, `security definer`, ~line 273):
+  1. Looks up the claimer's email from `auth.users` server-side (never trusts a
+     client-supplied email).
+  2. Row-locks the listing (`for update`) and validates: listing exists, is
+     `active`, hasn't expired, isn't the claimer's own listing, and the requested
+     quantity doesn't exceed what's left. The row lock is what prevents two
+     people from simultaneously claiming more swipes than actually exist.
+  3. Inserts a row into `swipe_matches` snapshotting both emails, the quantity,
+     price, location, and meeting window.
+  4. If the claim used up all remaining quantity, sets the listing's `status` to
+     `'completed'`. Otherwise decrements `quantity` in place (so "quantity" on an
+     active listing always means "remaining", not "originally posted").
+- On success, the claimer immediately sees a "You're connected!" screen with the
+  poster's email, quantity, price, and meeting details. The listing/matches are
+  reloaded so the grid reflects the new remaining quantity.
+- The **poster** finds out by checking the **Matches** tab next time they open
+  the app — there is no push notification or email (see "Design decisions").
+
+### Matches tab
+- New 4th tab. Queries `swipe_matches` (RLS already restricts results to rows
+  where the current user is `poster_id` or `claimer_id`, so no extra filter
+  needed client-side). Renders each match as "Selling to X" or "Buying from X"
+  depending on whether the current user was the original poster and whether the
+  original listing was a `sell` or `buy` — this is why `swipe_matches` stores its
+  own `listing_type` column (a snapshot of the original listing's type), since a
+  match row on its own doesn't otherwise tell you which side of the trade the
+  poster was on.
+
+### Expiry
+- No cron job / server-side status flip. `isExpired(l)` (index.html) just
+  compares `meeting_end` to `new Date()` at render time, same lightweight
+  approach the rest of the app already uses for pace/projection math.
+- If a signed-in user has any of their own **active** listings that are expired,
+  a red banner appears at the top of the Swipe Market page (reusing the existing
+  `.configWarning` style) telling them how many and to check My Listings.
+
+### Header nudge ("Buy extra swipes here!" / "Sell extra swipes here!")
+- `updateMarketNudge()` (index.html, ~line 1462), called at the end of the
+  existing `updateSwipesSummary()` function so it recomputes on every log/plan
+  change.
+- Logic: once at least a week has elapsed since `SEMESTER_START`, compute the
+  user's actual average swipes/week so far, project that pace across the
+  remaining weeks, and compare to their plan's `total_swipes`. >5% over
+  projected → "Running low — Buy extra swipes here!" (red). >15% under
+  projected → "Won't use all your swipes — Sell extra swipes here!" (green).
+  Otherwise no nudge. Requires a saved dining plan; shows nothing if none is set.
+
+## Design decisions worth knowing (so you don't redo this thinking)
+
+- **No email/push notification service.** The user (repo owner) asked whether
+  emailing the poster was necessary, and we decided against it deliberately: it
+  would've required signing up for a third-party service (Resend/SendGrid/etc),
+  generating and storing a new API key, and dealing with sender-domain
+  verification just to email arbitrary `@columbia.edu` addresses. Since both
+  people already have accounts, doing the whole "connect two people" job inside
+  Supabase via `swipe_matches` + one RPC function needed zero new infrastructure
+  and zero new secrets. The tradeoff is polling instead of push — acceptable
+  since the app has no notification system at all elsewhere either.
+- **Meeting location is free text, not a dropdown of dining halls.** Dining hall
+  names in this app come dynamically from `/api/menus` at runtime (there's no
+  static `HALLS` constant to reuse), and hand-typing a hardcoded list risked
+  being wrong/incomplete. Free text was the safer call; a `<datalist>`
+  autocomplete against loaded menu data would be a nice upgrade later but wasn't
+  necessary for the ask.
+- **`contact_email` is enforced at the DB level too**, not just trusted from the
+  client: `check (contact_email ~* '^[^@]+@(columbia|barnard)\.edu$')` on
+  `swipe_listings`. Redundant with the fact that `enforce_edu_email` already
+  blocks non-school signups, but cheap insurance against ever surfacing an
+  emailfrom a non-.edu address.
+- **`swipe_listings.quantity` represents *remaining*, not originally posted.**
+  There's no `original_quantity` column — partial claims just decrement it in
+  place. This matches how "Selling 12 swipes" naturally becomes "Selling 7
+  swipes" after 5 get claimed, with no extra bookkeeping.
+- **Listing status is only `active`/`completed`**, no `cancelled`. Earlier in
+  development a `cancelled` status existed but was removed because nothing in
+  the UI ever set it — dead code. If you want an explicit "withdraw without
+  fulfilling" action later, that's the value to reintroduce.
+- **Known overlap gap**: if a listing with quantity > 1 gets claimed by multiple
+  different people in pieces, every resulting match shares the *same* meeting
+  location/window from the original listing (there's no per-claim scheduling).
+  Fine for "swipe people in one at a time over a window," but worth knowing.
+
+## Setup required before any of this works for real
+
+1. **Run `schema.sql` in the Supabase SQL editor.** The `swipe_listings`,
+   `swipe_matches` tables and the `claim_swipe_listing()` function don't exist in
+   the real project yet — only in this file. If `swipe_listings` was somehow
+   already created from an earlier iteration, don't just re-run the `create
+   table` — see the commented-out `alter table` migration block right after it
+   (around line 198) instead.
+2. **Turn off the local-preview login bypass.** Near the top of the Swipe Market
+   JS block, `index.html` currently has:
+   ```js
+   const MARKET_SKIP_LOGIN_GATE = true;
+   ```
+   This was added temporarily so the page (and fake sample listings/matches)
+   could be reviewed without a working Supabase login. **Set it to `false`**
+   before this ships or gets used with real accounts — everything downstream
+   (`MARKET_SAMPLE_LISTINGS`, `MARKET_SAMPLE_MATCHES`, the `preview-user` id
+   fallback, the "sample-*" short-circuit in `confirmClaim`) is gated behind this
+   one flag and stops mattering once it's `false`. You don't need to delete the
+   sample-data code, just flip the flag — though deleting it is fine too if you'd
+   rather clean it up.
+3. **Test with two real `@columbia.edu`/`@barnard.edu` accounts.** Everything so
+   far has only been verified against a static file server with the login bypass
+   and fake data — I have not been able to exercise the real
+   `claim_swipe_listing()` function, real RLS enforcement, or the real Matches
+   tab against live Supabase. Recommended test: Account A posts a sell listing,
+   Account B claims part of it, confirm both see the match under Matches with
+   correct emails/roles, confirm A's listing shows reduced quantity (or
+   "Completed" if fully claimed), confirm B can't claim more than what's left.
+4. **Local dev**: use `npm run dev:local` (project's own lightweight dev server,
+   `scripts/dev-server.js`), not `vercel dev` — the Vercel project's "Build
+   Command" (`node scripts/generate-config.js`) regenerates `config.js` from
+   environment variables that aren't scoped to the Development environment in
+   Vercel's dashboard, which will silently overwrite a manually-configured
+   `config.js` with empty values. `dev:local` serves `config.js` as a static file
+   and never touches it. Known gap: `dev:local` doesn't route `/api/chat.js`, so
+   "Ask Roarie" chat won't work under it (pre-existing, unrelated to this
+   feature) — everything else, including Swipe Market, works fine.
+
+## Not built (explicitly out of scope so far)
+
+- **Editing a listing.** Only Delete exists for an owner's active listing; no
+  edit-in-place. Workaround is delete-and-repost.
+- **Withdrawing/cancelling a listing distinct from completing it** (see
+  "cancelled" status note above).
+- **Any notification beyond the in-app Matches tab** (no email, no push).
+- **Mobile-narrow-viewport testing** — layout uses flex-wrap and should adapt,
+  but hasn't been specifically checked below ~768px.
+- **Automated tests** — this repo has no test suite anywhere (consistent with
+  the rest of the app, a single-file no-build-step project), so none were added
+  here either.
+
+## If you're a fresh Claude session picking this up
+
+Read `index.html`'s Swipe Market CSS block (search `Swipe Market page`, ~line
+195) and JS block (search `Swipe Market page`, ~line 1500) top to bottom before
+changing anything — it's all co-located and reasonably commented inline. Same
+for the bottom third of `schema.sql`. This document should give you the "why"
+behind the non-obvious choices; the code comments give you the "what" at each
+specific spot.

@@ -52,10 +52,14 @@
 
   /* ---- Header ---- */
   header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid var(--navy);margin-bottom:22px;}
-  .clock{flex:1 1 0;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);opacity:.75;}
+  .headerLeft{flex:1 1 0;display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:190px;}
+  .clock{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);opacity:.75;}
   .clock .time{font-size:20px;font-weight:600;display:block;margin-top:2px;letter-spacing:0;text-transform:none;}
   .semesterLine{margin-top:8px;font-size:11.5px;color:var(--muted);text-transform:none;letter-spacing:0;}
   .semesterLine b{color:var(--navy);}
+  .marketNudge{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:11.5px;font-weight:600;margin-top:6px;max-width:200px;line-height:1.4;}
+  .marketNudge.buy{color:var(--danger);}
+  .marketNudge.sell{color:var(--success);}
   .brand{text-align:center;flex:1;}
   .brand h1{margin:0;font-size:40px;font-weight:800;letter-spacing:-.01em;color:var(--navy);}
   .brand .subtitle{font-family:var(--font-body);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-top:2px;}
@@ -187,6 +191,38 @@
   #breakdownPage.show{display:block;}
   #mainPage.hide{display:none;}
   .backBtn{margin-bottom:16px;}
+
+  /* ---- Swipe Market page ---- */
+  #marketPage{display:none;}
+  #marketPage.show{display:block;}
+  .marketHead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:6px;}
+  .marketIntro{color:var(--muted);font-size:13px;max-width:520px;margin:0 0 18px;line-height:1.5;}
+  .marketTabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+  .marketTab{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;padding:8px 18px;border-radius:20px;border:1.5px solid var(--navy);background:transparent;color:var(--navy);}
+  .marketTab.active{background:var(--navy);color:var(--primary-fg);}
+  .listingGrid{display:flex;flex-direction:column;gap:12px;margin-bottom:24px;}
+  .listingCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;transition:.15s;}
+  .listingCard.mine{border-color:var(--navy);background:var(--columbia-blue);}
+  .listingCard.claimable{cursor:pointer;}
+  .listingCard.claimable:hover{border-color:var(--navy);box-shadow:0 3px 10px rgba(86,84,134,.12);}
+  .listingCard .lPrice{font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--navy);white-space:nowrap;}
+  .listingCard .lPrice small{display:block;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  .listingCard .lInfo{flex:1;min-width:180px;}
+  .listingCard .lQty{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:var(--ink);}
+  .listingCard .lNote{font-size:13px;color:var(--ink);margin-top:4px;line-height:1.4;}
+  .listingCard .lMeeting{font-size:12.5px;color:var(--navy);font-weight:600;margin-top:4px;}
+  .listingCard .lMeta{font-size:11px;color:var(--muted);margin-top:6px;}
+  .listingCard .lActions{display:flex;flex-direction:column;gap:6px;align-items:flex-end;min-width:120px;}
+  .listingCard .lContact{font-size:12.5px;color:var(--navy);font-weight:600;text-align:right;}
+  .listingCard .statusTag{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:10px;background:var(--secondary);color:var(--muted);}
+  .listingCard .statusTag.completed{color:var(--success);}
+  .listingCard .statusTag.expired{color:var(--danger);}
+  .listingEmpty{text-align:center;color:var(--muted);font-size:13px;padding:34px 0;}
+  .marketGate{text-align:center;color:var(--muted);font-size:13px;padding:34px 0;}
+  .typeToggle{display:flex;gap:8px;margin-bottom:14px;}
+  .typeToggleBtn{flex:1;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;}
+  .typeToggleBtn.selected{border-color:var(--navy);background:var(--columbia-blue);color:var(--navy);}
+  textarea.authField{resize:vertical;min-height:60px;font-family:inherit;}
   .statGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:30px;}
   .statCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;text-align:center;}
   .statCard .val{font-family:var(--font-display);font-size:32px;color:var(--navy);font-weight:700;}
@@ -229,11 +265,17 @@
   <!-- ================= MAIN PAGE ================= -->
   <div id="mainPage">
     <header>
-      <div class="clock util">
-        Columbia Time (ET)
-        <span class="time" id="clockTime">--:--</span>
-        <div id="clockDate"></div>
-        <div class="semesterLine">Days until semester end: <b id="semesterDays">--</b></div>
+      <div class="headerLeft">
+        <div class="clock util">
+          Columbia Time (ET)
+          <span class="time" id="clockTime">--:--</span>
+          <div id="clockDate"></div>
+          <div class="semesterLine">Days until semester end: <b id="semesterDays">--</b></div>
+        </div>
+        <div>
+          <button class="btn util" id="marketBtn">Swipe Market &rarr;</button>
+          <div class="marketNudge util" id="marketNudge"></div>
+        </div>
       </div>
       <div class="brand">
         <h1>LionSwipe<span class="brandIcon">&#129409;</span></h1>
@@ -312,6 +354,31 @@
         <svg id="pieSvg" width="160" height="160" viewBox="0 0 160 160"></svg>
         <div class="legend" id="pieLegend"></div>
       </div>
+    </div>
+  </div>
+
+  <!-- ================= SWIPE MARKET PAGE ================= -->
+  <div id="marketPage">
+    <button class="btn backBtn util" id="marketBackBtn">&larr; Back to LionSwipe</button>
+    <div class="marketHead">
+      <h2 style="color:var(--navy);font-weight:800;margin:0;">Swipe Market</h2>
+      <button class="btn solid util" id="postListingBtn">+ Post a Listing</button>
+    </div>
+    <p class="marketIntro util">Buy or sell extra meal swipes with other Columbia/Barnard students. Click a listing to claim it — LionSwipe doesn't process payments or transfer swipes for you, but swipes can only change hands in person, so claiming connects you both with a meetup time, location, and each other's school email.</p>
+
+    <div id="marketSignedOut" class="marketGate util" style="display:none;">
+      Log in with your @columbia.edu / @barnard.edu email to browse and post listings.
+    </div>
+
+    <div id="marketSignedIn" style="display:none;">
+      <div id="marketExpiredBanner" class="configWarning" style="display:none;"></div>
+      <div class="marketTabs util" id="marketTabs">
+        <button type="button" class="marketTab active" data-tab="buy">Buy Swipes</button>
+        <button type="button" class="marketTab" data-tab="sell">Sell Swipes</button>
+        <button type="button" class="marketTab" data-tab="mine">My Listings</button>
+        <button type="button" class="marketTab" data-tab="matches">Matches</button>
+      </div>
+      <div class="listingGrid" id="listingGrid"></div>
     </div>
   </div>
 
@@ -407,6 +474,60 @@
     <div class="err" id="planErr" style="display:none;"></div>
     <button class="btn solid" id="planSubmit" style="width:100%;">Save Profile</button>
     <div style="margin-top:14px;" id="planCancelWrap"><button class="btn" id="planCancel">Cancel</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="listingOverlay">
+  <div class="modal util" style="max-width:380px;text-align:left;">
+    <h3 id="listingTitle" style="text-align:center;">Post a Listing</h3>
+
+    <div class="typeToggle">
+      <button type="button" class="typeToggleBtn selected" id="listingTypeSell" data-type="sell">I'm Selling</button>
+      <button type="button" class="typeToggleBtn" id="listingTypeBuy" data-type="buy">I'm Buying</button>
+    </div>
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Number of swipes</label>
+    <input class="authField" id="listingQuantity" type="number" min="1" step="1" placeholder="e.g. 10">
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Price per swipe ($)</label>
+    <input class="authField" id="listingPrice" type="number" min="0" step="0.01" placeholder="e.g. 6.50">
+
+    <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">Swipes can only be transferred by swiping the other person in together, so pick a dining hall and a time window to meet (at least 15 minutes).</p>
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Meeting location</label>
+    <input class="authField" id="listingLocation" placeholder="e.g. John Jay entrance">
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Meeting window starts</label>
+    <input class="authField" id="listingMeetStart" type="datetime-local">
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Meeting window ends</label>
+    <input class="authField" id="listingMeetEnd" type="datetime-local">
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Note (optional)</label>
+    <textarea class="authField" id="listingNote" placeholder="e.g. Willing to split into smaller batches"></textarea>
+
+    <p style="font-size:11px;color:var(--muted);margin:0 0 0;">Your school email (<span id="listingContactPreview" style="font-weight:600;"></span>) is shown to other students automatically — no contact info to enter.</p>
+
+    <div class="err" id="listingErr" style="display:none;"></div>
+    <button class="btn solid" id="listingSubmit" style="width:100%;">Post Listing</button>
+    <div style="margin-top:14px;text-align:center;"><button class="btn" id="listingCancel">Cancel</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="claimOverlay">
+  <div class="modal util">
+    <h3 id="claimTitle">Confirm</h3>
+    <div id="claimSummary" style="font-size:13.5px;color:var(--ink);text-align:left;line-height:1.7;margin-bottom:4px;"></div>
+    <div class="counter" id="claimCounterWrap">
+      <button id="claimMinus">&minus;</button>
+      <div class="n" id="claimQty">1</div>
+      <button id="claimPlus">+</button>
+    </div>
+    <div class="err" id="claimErr" style="display:none;"></div>
+    <div class="row">
+      <button class="btn solid" id="claimConfirm">Confirm</button>
+      <button class="btn" id="claimCancel">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -1327,6 +1448,42 @@ function updateSwipesSummary(){
       authMode = 'signup'; renderAuth(); loginOverlay.classList.add('show');
     };
   }
+
+  updateMarketNudge(usedSemester, now);
+}
+
+// Nudges the Swipe Market button when your recent pace projects you to finish the
+// semester meaningfully off from your plan total. Reuses the same "pace needed to
+// finish on time" idea as weekNeeded above, but looking backward (actual average
+// pace so far) instead of forward (pace still required) — projecting that actual
+// pace across the weeks remaining gives an estimated end-of-semester swipe count
+// to compare against the plan. Requires at least a week of data since a day or two
+// of noisy usage isn't a reliable pace signal yet.
+function updateMarketNudge(usedSemester, now){
+  const nudgeEl = document.getElementById('marketNudge');
+  if(!nudgeEl) return;
+  const weekMs = 7*24*3600*1000;
+  const weeksElapsed = (now - SEMESTER_START) / weekMs;
+  if(!userPlan || !userPlan.total_swipes || weeksElapsed < 1){
+    nudgeEl.textContent = '';
+    nudgeEl.className = 'marketNudge util';
+    return;
+  }
+  const weeksRemaining = Math.max(0, (SEMESTER_END - now) / weekMs);
+  const avgPerWeek = usedSemester / weeksElapsed;
+  const projectedTotal = usedSemester + avgPerWeek * weeksRemaining;
+  const total = userPlan.total_swipes;
+
+  if(projectedTotal > total * 1.05){
+    nudgeEl.textContent = 'Running low on swipes — Buy extra swipes here!';
+    nudgeEl.className = 'marketNudge util buy';
+  } else if(projectedTotal < total * 0.85){
+    nudgeEl.textContent = "Won't use all your swipes — Sell extra swipes here!";
+    nudgeEl.className = 'marketNudge util sell';
+  } else {
+    nudgeEl.textContent = '';
+    nudgeEl.className = 'marketNudge util';
+  }
 }
 
 /* ---------------- Breakdown page ---------------- */
@@ -1338,6 +1495,415 @@ document.getElementById('breakdownBtn').onclick = ()=>{
 document.getElementById('backBtn').onclick = ()=>{
   document.getElementById('breakdownPage').classList.remove('show');
   document.getElementById('mainPage').classList.remove('hide');
+};
+
+/* ---------------- Swipe Market page ---------------- */
+// Requires a real account end-to-end (no guest/localStorage mode like logs have) —
+// a listing is only useful if it can be matched with a real person to contact, and
+// RLS on swipe_listings is locked to `authenticated` (see schema.sql).
+//
+// TEMP (2026-08-20): login gate bypassed for local UI preview, per request — set
+// back to false when told to. Note this only skips the *frontend* gate; RLS still
+// blocks anon reads/writes at the DB level, so the page will show as empty/error
+// out on submit unless you're actually logged in.
+const MARKET_SKIP_LOGIN_GATE = true;
+// TEMP (2026-08-20): sample listings/matches shown while the gate above is
+// bypassed, so there's something to look at without writing fake rows into the
+// real Supabase tables. Goes away automatically when MARKET_SKIP_LOGIN_GATE is
+// set back to false. 'preview-user' rows simulate what's shown under "My
+// Listings"/"Matches" while signed-in-as-nobody, including one already-expired
+// listing so the expiry banner and "Expired" tag have something to demonstrate.
+const MARKET_SAMPLE_LISTINGS = [
+  { id:'sample-1', user_id:'sample-user-1', type:'sell', quantity:12, price_per_swipe:6.00, note:"Graduating early, need these gone before finals week!", contact_email:'lf2234@columbia.edu', status:'active', meeting_location:'Ferris Booth Commons entrance', meeting_start:new Date(Date.now()+1*24*3600*1000).toISOString(), meeting_end:new Date(Date.now()+1*24*3600*1000+30*60*1000).toISOString(), created_at:new Date(Date.now()-2*3600*1000).toISOString() },
+  { id:'sample-2', user_id:'sample-user-2', type:'sell', quantity:5, price_per_swipe:5.25, note:null, contact_email:'ab4455@barnard.edu', status:'active', meeting_location:"JJ's Place", meeting_start:new Date(Date.now()+2*3600*1000).toISOString(), meeting_end:new Date(Date.now()+2*3600*1000+20*60*1000).toISOString(), created_at:new Date(Date.now()-26*3600*1000).toISOString() },
+  { id:'sample-3', user_id:'sample-user-3', type:'sell', quantity:20, price_per_swipe:6.75, note:"Can split into two meetups if needed", contact_email:'cc3344@columbia.edu', status:'active', meeting_location:'John Jay Dining Hall', meeting_start:new Date(Date.now()+2*24*3600*1000).toISOString(), meeting_end:new Date(Date.now()+2*24*3600*1000+45*60*1000).toISOString(), created_at:new Date(Date.now()-3*24*3600*1000).toISOString() },
+  { id:'sample-4', user_id:'sample-user-4', type:'buy', quantity:8, price_per_swipe:6.50, note:'Ran out early this semester, need swipes ASAP', contact_email:'jd3456@columbia.edu', status:'active', meeting_location:"Chef Mike's Sub Shop", meeting_start:new Date(Date.now()+5*3600*1000).toISOString(), meeting_end:new Date(Date.now()+5*3600*1000+15*60*1000).toISOString(), created_at:new Date(Date.now()-5*3600*1000).toISOString() },
+  { id:'sample-5', user_id:'sample-user-5', type:'buy', quantity:15, price_per_swipe:5.75, note:null, contact_email:'bb5566@barnard.edu', status:'active', meeting_location:'Hewitt Dining', meeting_start:new Date(Date.now()+3*24*3600*1000).toISOString(), meeting_end:new Date(Date.now()+3*24*3600*1000+30*60*1000).toISOString(), created_at:new Date(Date.now()-1.5*24*3600*1000).toISOString() },
+  { id:'sample-6', user_id:'preview-user', type:'sell', quantity:10, price_per_swipe:6.25, note:'Meet outside Ferris', contact_email:'you@columbia.edu', status:'active', meeting_location:'Ferris Booth Commons entrance', meeting_start:new Date(Date.now()-3*3600*1000).toISOString(), meeting_end:new Date(Date.now()-2.5*3600*1000).toISOString(), created_at:new Date(Date.now()-24*3600*1000).toISOString() },
+  { id:'sample-7', user_id:'preview-user', type:'buy', quantity:6, price_per_swipe:5.50, note:null, contact_email:'you@columbia.edu', status:'active', meeting_location:'John Jay Dining Hall', meeting_start:new Date(Date.now()+1*24*3600*1000).toISOString(), meeting_end:new Date(Date.now()+1*24*3600*1000+20*60*1000).toISOString(), created_at:new Date(Date.now()-4*3600*1000).toISOString() },
+];
+const MARKET_SAMPLE_MATCHES = [
+  { id:'match-1', listing_id:'sample-past-1', listing_type:'sell', poster_id:'preview-user', claimer_id:'sample-user-9', poster_email:'you@columbia.edu', claimer_email:'wl7788@columbia.edu', quantity:3, price_per_swipe:6.00, meeting_location:'Ferris Booth Commons entrance', meeting_start:new Date(Date.now()+6*3600*1000).toISOString(), meeting_end:new Date(Date.now()+6*3600*1000+20*60*1000).toISOString(), created_at:new Date(Date.now()-1*3600*1000).toISOString() },
+];
+let marketListings = [];
+let marketMatches = [];
+let marketTab = 'buy'; // 'buy' = browse others' sell listings, 'sell' = browse others' buy listings, 'mine' = your own, 'matches' = confirmed matches
+let editingListingType = 'sell';
+let claimListing = null; // the listing currently open in the claim confirmation modal
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.getElementById('marketBtn').onclick = ()=>{
+  document.getElementById('mainPage').classList.add('hide');
+  document.getElementById('marketPage').classList.add('show');
+  renderMarket();
+};
+document.getElementById('marketBackBtn').onclick = ()=>{
+  document.getElementById('marketPage').classList.remove('show');
+  document.getElementById('mainPage').classList.remove('hide');
+};
+
+async function renderMarket(){
+  const signedOut = document.getElementById('marketSignedOut');
+  const signedIn = document.getElementById('marketSignedIn');
+  document.getElementById('postListingBtn').style.display = (currentUser || MARKET_SKIP_LOGIN_GATE) ? 'inline-block' : 'none';
+  if(!currentUser && !MARKET_SKIP_LOGIN_GATE){
+    signedOut.style.display = 'block';
+    signedIn.style.display = 'none';
+    signedOut.innerHTML = `Log in with your @columbia.edu / @barnard.edu email to browse and post listings. <a href="#" id="marketSignInLink">Log in / sign up</a>`;
+    document.getElementById('marketSignInLink').onclick = (e)=>{
+      e.preventDefault();
+      authMode = 'login'; renderAuth(); loginOverlay.classList.add('show');
+    };
+    return;
+  }
+  signedOut.style.display = 'none';
+  signedIn.style.display = 'block';
+  await Promise.all([loadListings(), loadMatches()]);
+  renderListingGrid();
+}
+
+async function loadListings(){
+  if(MARKET_SKIP_LOGIN_GATE && !currentUser){ marketListings = MARKET_SAMPLE_LISTINGS; return; }
+  if(!supabase || !currentUser){ marketListings = []; return; }
+  const { data, error } = await supabase.from('swipe_listings').select('*').order('created_at', {ascending:false});
+  if(error){ console.error(error); marketListings = []; return; }
+  marketListings = data;
+}
+
+async function loadMatches(){
+  if(MARKET_SKIP_LOGIN_GATE && !currentUser){ marketMatches = MARKET_SAMPLE_MATCHES; return; }
+  if(!supabase || !currentUser){ marketMatches = []; return; }
+  const { data, error } = await supabase.from('swipe_matches').select('*').order('created_at', {ascending:false});
+  if(error){ console.error(error); marketMatches = []; return; }
+  marketMatches = data;
+}
+
+document.getElementById('marketTabs').onclick = (e)=>{
+  const btn = e.target.closest('.marketTab');
+  if(!btn) return;
+  marketTab = btn.dataset.tab;
+  document.querySelectorAll('.marketTab').forEach(t=>t.classList.toggle('active', t===btn));
+  renderListingGrid();
+};
+
+function isExpired(l){
+  return !!l.meeting_end && new Date(l.meeting_end) < new Date();
+}
+
+function fmtMeetingWindow(l){
+  if(!l.meeting_start || !l.meeting_end) return '';
+  const start = new Date(l.meeting_start), end = new Date(l.meeting_end);
+  const dateFmt = new Intl.DateTimeFormat('en-US', {weekday:'short', month:'short', day:'numeric'});
+  const timeFmt = new Intl.DateTimeFormat('en-US', {hour:'numeric', minute:'2-digit'});
+  const sameDay = start.toDateString() === end.toDateString();
+  return sameDay
+    ? `${dateFmt.format(start)} &middot; ${timeFmt.format(start)}&ndash;${timeFmt.format(end)}`
+    : `${dateFmt.format(start)} ${timeFmt.format(start)} &ndash; ${dateFmt.format(end)} ${timeFmt.format(end)}`;
+}
+
+function renderListingGrid(){
+  const myId = currentUser ? currentUser.id : (MARKET_SKIP_LOGIN_GATE ? 'preview-user' : null);
+
+  // Lets the poster know their meeting window passed — the whole point of
+  // requiring one is that swipes can only change hands in person, so a listing
+  // whose window already lapsed needs the owner's attention (repost or delete),
+  // and isn't actionable for anyone else browsing.
+  const banner = document.getElementById('marketExpiredBanner');
+  const expiredMine = marketListings.filter(l=>l.user_id===myId && l.status==='active' && isExpired(l));
+  if(expiredMine.length > 0){
+    banner.style.display = 'block';
+    banner.textContent = `${expiredMine.length} of your listing${expiredMine.length===1?'':'s'} expired — the meeting window passed. Check "My Listings" to repost or delete.`;
+  } else {
+    banner.style.display = 'none';
+  }
+
+  if(marketTab === 'matches'){ renderMatches(myId); return; }
+
+  const grid = document.getElementById('listingGrid');
+  let rows;
+  if(marketTab === 'mine'){
+    rows = marketListings.filter(l=>l.user_id === myId);
+  } else if(marketTab === 'buy'){
+    // Browsing swipes for sale — cheapest first.
+    rows = marketListings.filter(l=>l.type==='sell' && l.status==='active' && l.user_id!==myId && !isExpired(l))
+      .sort((a,b)=>a.price_per_swipe-b.price_per_swipe);
+  } else {
+    // Browsing buyer requests — highest offer first.
+    rows = marketListings.filter(l=>l.type==='buy' && l.status==='active' && l.user_id!==myId && !isExpired(l))
+      .sort((a,b)=>b.price_per_swipe-a.price_per_swipe);
+  }
+
+  if(rows.length === 0){
+    const emptyMsg = marketTab==='mine' ? "You haven't posted any listings yet."
+      : marketTab==='buy' ? 'No one is selling swipes right now — check back later.'
+      : 'No one is looking to buy swipes right now — check back later.';
+    grid.innerHTML = `<div class="listingEmpty">${emptyMsg}</div>`;
+    return;
+  }
+
+  grid.innerHTML = rows.map(l=>{
+    const mine = l.user_id === myId;
+    const expired = isExpired(l);
+    const total = (l.quantity * l.price_per_swipe).toFixed(2);
+    const typeLabel = l.type==='sell' ? 'Selling' : 'Buying';
+    const noteHtml = l.note ? `<div class="lNote">${escapeHtml(l.note)}</div>` : '';
+    const meetingHtml = l.meeting_location ? `<div class="lMeeting">${escapeHtml(l.meeting_location)} &middot; ${fmtMeetingWindow(l)}</div>` : '';
+    const postedAgo = fmtTimeAgo(new Date(l.created_at));
+    let actionsHtml;
+    if(mine){
+      const statusClass = l.status==='completed' ? 'completed' : expired ? 'expired' : '';
+      const statusLabel = l.status==='completed' ? 'Completed' : expired ? 'Expired' : 'Active';
+      const buttons = (l.status==='active' && !expired)
+        ? `<button class="btn util" data-action="complete" data-id="${l.id}" style="font-size:11px;padding:5px 10px;">Mark Complete</button>
+           <button class="btn danger util" data-action="delete" data-id="${l.id}" style="font-size:11px;padding:5px 10px;">Delete</button>`
+        : `<button class="btn danger util" data-action="delete" data-id="${l.id}" style="font-size:11px;padding:5px 10px;">Delete</button>`;
+      actionsHtml = `<span class="statusTag ${statusClass}">${statusLabel}</span>${buttons}`;
+    } else {
+      actionsHtml = `<div class="lContact">${escapeHtml(l.contact_email)}</div>`;
+    }
+    return `<div class="listingCard ${mine?'mine':'claimable'}" ${mine?'':`data-listing-id="${l.id}"`}>
+      <div class="lPrice">$${l.price_per_swipe.toFixed(2)}<small>per swipe</small></div>
+      <div class="lInfo">
+        <div class="lQty">${typeLabel} ${l.quantity} swipe${l.quantity===1?'':'s'} &middot; $${total} total</div>
+        ${meetingHtml}
+        ${noteHtml}
+        <div class="lMeta">Posted ${postedAgo}</div>
+      </div>
+      <div class="lActions">${actionsHtml}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderMatches(myId){
+  const grid = document.getElementById('listingGrid');
+  if(marketMatches.length === 0){
+    grid.innerHTML = `<div class="listingEmpty">No confirmed matches yet — claim a listing, or check back after someone claims yours.</div>`;
+    return;
+  }
+  grid.innerHTML = marketMatches.map(m=>{
+    const iAmPoster = m.poster_id === myId;
+    const counterpartEmail = iAmPoster ? m.claimer_email : m.poster_email;
+    // listing_type='sell' means the poster was selling; otherwise the poster
+    // wanted to buy and whoever claimed it is the one selling.
+    const iAmSelling = iAmPoster ? m.listing_type==='sell' : m.listing_type==='buy';
+    const total = (m.quantity * m.price_per_swipe).toFixed(2);
+    return `<div class="listingCard">
+      <div class="lPrice">$${m.price_per_swipe.toFixed(2)}<small>per swipe</small></div>
+      <div class="lInfo">
+        <div class="lQty">${iAmSelling?'Selling':'Buying'} ${m.quantity} swipe${m.quantity===1?'':'s'} ${iAmSelling?'to':'from'} ${escapeHtml(counterpartEmail)} &middot; $${total} total</div>
+        <div class="lMeeting">${escapeHtml(m.meeting_location)} &middot; ${fmtMeetingWindow(m)}</div>
+        <div class="lMeta">Matched ${fmtTimeAgo(new Date(m.created_at))}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function fmtTimeAgo(d){
+  const mins = Math.round((Date.now()-d.getTime())/60000);
+  if(mins < 1) return 'just now';
+  if(mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins/60);
+  if(hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs/24);
+  if(days < 7) return `${days}d ago`;
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+document.getElementById('listingGrid').onclick = async (e)=>{
+  const actionBtn = e.target.closest('button[data-action]');
+  if(actionBtn){
+    const id = actionBtn.dataset.id;
+    let error;
+    if(actionBtn.dataset.action === 'complete'){
+      ({ error } = await supabase.from('swipe_listings').update({ status:'completed', updated_at:new Date().toISOString() }).eq('id', id));
+    } else if(actionBtn.dataset.action === 'delete'){
+      if(!confirm('Delete this listing?')) return;
+      ({ error } = await supabase.from('swipe_listings').delete().eq('id', id));
+    }
+    if(error){ console.error(error); alert('Could not update that listing — try again.'); return; }
+    await loadListings();
+    renderListingGrid();
+    return;
+  }
+  const card = e.target.closest('.listingCard.claimable[data-listing-id]');
+  if(card) openClaimModal(card.dataset.listingId);
+};
+
+/* ---- Claim confirmation: click a listing, same counter-then-confirm pattern as
+   logging a dining hall swipe (openSwipeModal above). Confirming calls the
+   claim_swipe_listing() DB function (schema.sql), which atomically records a
+   swipe_matches row — connecting both people's emails + the meetup details — and
+   updates the listing's remaining quantity/status. ---- */
+const claimOverlay = document.getElementById('claimOverlay');
+let claimQty = 1;
+
+function openClaimModal(listingId){
+  claimListing = marketListings.find(l=>l.id === listingId);
+  if(!claimListing) return;
+  claimQty = 1;
+  document.getElementById('claimTitle').textContent = claimListing.type==='sell' ? 'Confirm Purchase' : 'Confirm Sale';
+  renderClaimSummary();
+  document.getElementById('claimCounterWrap').style.display = claimListing.quantity > 1 ? 'flex' : 'none';
+  document.getElementById('claimQty').textContent = claimQty;
+  document.getElementById('claimErr').style.display = 'none';
+  const confirmBtn = document.getElementById('claimConfirm');
+  confirmBtn.disabled = false;
+  confirmBtn.textContent = 'Confirm';
+  confirmBtn.onclick = confirmClaim;
+  document.getElementById('claimCancel').style.display = 'inline-block';
+  claimOverlay.classList.add('show');
+}
+function renderClaimSummary(){
+  const l = claimListing;
+  const total = (claimQty * l.price_per_swipe).toFixed(2);
+  const verb = l.type==='sell' ? 'buying' : 'selling';
+  document.getElementById('claimSummary').innerHTML = `
+    You're ${verb} <b>${claimQty}</b> swipe${claimQty===1?'':'s'} at $${l.price_per_swipe.toFixed(2)}/swipe ($${total} total).<br>
+    <b>${escapeHtml(l.meeting_location)}</b> &middot; ${fmtMeetingWindow(l)}<br>
+    Posted by ${escapeHtml(l.contact_email)}
+  `;
+}
+document.getElementById('claimMinus').onclick = ()=>{
+  claimQty = Math.max(1, claimQty-1);
+  document.getElementById('claimQty').textContent = claimQty;
+  renderClaimSummary();
+};
+document.getElementById('claimPlus').onclick = ()=>{
+  claimQty = Math.min(claimListing.quantity, claimQty+1);
+  document.getElementById('claimQty').textContent = claimQty;
+  renderClaimSummary();
+};
+document.getElementById('claimCancel').onclick = ()=> claimOverlay.classList.remove('show');
+
+async function confirmClaim(){
+  const errEl = document.getElementById('claimErr');
+  errEl.style.display = 'none';
+  const btn = document.getElementById('claimConfirm');
+
+  // Sample listings in preview mode aren't real rows — fake a successful claim
+  // locally instead of calling the (nonexistent) real listing through Supabase.
+  if(MARKET_SKIP_LOGIN_GATE && !currentUser && String(claimListing.id).startsWith('sample')){
+    showClaimSuccess({
+      counterpartEmail: claimListing.contact_email, quantity: claimQty, price_per_swipe: claimListing.price_per_swipe,
+      meeting_location: claimListing.meeting_location, meeting_start: claimListing.meeting_start, meeting_end: claimListing.meeting_end
+    });
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Confirming...';
+  const { data, error } = await supabase.rpc('claim_swipe_listing', { p_listing_id: claimListing.id, p_quantity: claimQty });
+  btn.disabled = false; btn.textContent = 'Confirm';
+  if(error){
+    console.error(error);
+    errEl.textContent = error.message || 'Could not claim this listing — try again.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const match = Array.isArray(data) ? data[0] : data;
+  showClaimSuccess({
+    counterpartEmail: claimListing.contact_email, quantity: match.quantity, price_per_swipe: match.price_per_swipe,
+    meeting_location: match.meeting_location, meeting_start: match.meeting_start, meeting_end: match.meeting_end
+  });
+  await Promise.all([loadListings(), loadMatches()]);
+  renderListingGrid();
+}
+
+function showClaimSuccess(m){
+  document.getElementById('claimTitle').textContent = "You're connected!";
+  const total = (m.quantity * m.price_per_swipe).toFixed(2);
+  document.getElementById('claimSummary').innerHTML = `
+    ${m.quantity} swipe${m.quantity===1?'':'s'} at $${m.price_per_swipe.toFixed(2)}/swipe ($${total} total).<br>
+    <b>${escapeHtml(m.meeting_location)}</b> &middot; ${fmtMeetingWindow(m)}<br>
+    Meet <b>${escapeHtml(m.counterpartEmail)}</b> there — this is also saved under the Matches tab.
+  `;
+  document.getElementById('claimCounterWrap').style.display = 'none';
+  document.getElementById('claimErr').style.display = 'none';
+  document.getElementById('claimCancel').style.display = 'none';
+  const confirmBtn = document.getElementById('claimConfirm');
+  confirmBtn.textContent = 'Close';
+  confirmBtn.disabled = false;
+  confirmBtn.onclick = ()=> claimOverlay.classList.remove('show');
+}
+
+const listingOverlay = document.getElementById('listingOverlay');
+document.getElementById('postListingBtn').onclick = ()=>{
+  editingListingType = 'sell';
+  document.getElementById('listingTypeSell').classList.add('selected');
+  document.getElementById('listingTypeBuy').classList.remove('selected');
+  document.getElementById('listingQuantity').value = '';
+  document.getElementById('listingPrice').value = '';
+  document.getElementById('listingLocation').value = '';
+  document.getElementById('listingMeetStart').value = '';
+  document.getElementById('listingMeetEnd').value = '';
+  document.getElementById('listingNote').value = '';
+  document.getElementById('listingContactPreview').textContent = currentUser ? currentUser.email : 'sign in to post';
+  document.getElementById('listingErr').style.display = 'none';
+  listingOverlay.classList.add('show');
+};
+document.getElementById('listingTypeSell').onclick = ()=>{
+  editingListingType = 'sell';
+  document.getElementById('listingTypeSell').classList.add('selected');
+  document.getElementById('listingTypeBuy').classList.remove('selected');
+};
+document.getElementById('listingTypeBuy').onclick = ()=>{
+  editingListingType = 'buy';
+  document.getElementById('listingTypeBuy').classList.add('selected');
+  document.getElementById('listingTypeSell').classList.remove('selected');
+};
+document.getElementById('listingCancel').onclick = ()=> listingOverlay.classList.remove('show');
+
+document.getElementById('listingSubmit').onclick = async ()=>{
+  const errEl = document.getElementById('listingErr');
+  const quantity = parseInt(document.getElementById('listingQuantity').value, 10);
+  const price = parseFloat(document.getElementById('listingPrice').value);
+  const location = document.getElementById('listingLocation').value.trim();
+  const meetStartRaw = document.getElementById('listingMeetStart').value;
+  const meetEndRaw = document.getElementById('listingMeetEnd').value;
+  const note = document.getElementById('listingNote').value.trim();
+  if(!Number.isInteger(quantity) || quantity <= 0 || isNaN(price) || price < 0){
+    errEl.textContent = 'Please enter a valid number of swipes and a price.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(!location){
+    errEl.textContent = 'Please enter where you\'ll meet to swipe — swipes can only change hands in person.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const meetStart = meetStartRaw ? new Date(meetStartRaw) : null;
+  const meetEnd = meetEndRaw ? new Date(meetEndRaw) : null;
+  if(!meetStart || !meetEnd || isNaN(meetStart.getTime()) || isNaN(meetEnd.getTime())){
+    errEl.textContent = 'Please enter when you\'ll meet (both a start and end time).';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(meetStart.getTime() < Date.now() - 60000){
+    errEl.textContent = 'The meeting window can\'t start in the past.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(meetEnd.getTime() - meetStart.getTime() < 15*60000){
+    errEl.textContent = 'The meeting window needs to be at least 15 minutes long.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const { error } = await supabase.from('swipe_listings').insert({
+    user_id: currentUser ? currentUser.id : null, type: editingListingType, quantity, price_per_swipe: price,
+    meeting_location: location, meeting_start: meetStart.toISOString(), meeting_end: meetEnd.toISOString(),
+    note: note || null, contact_email: currentUser ? currentUser.email : null
+  });
+  if(error){
+    console.error(error);
+    errEl.textContent = 'Could not post your listing — try again.';
+    errEl.style.display = 'block';
+    return;
+  }
+  listingOverlay.classList.remove('show');
+  await loadListings();
+  renderListingGrid();
 };
 
 function startOfWeek(d){
