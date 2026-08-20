@@ -904,6 +904,17 @@ async function loadRoarieChat(){
   renderRoarieLog();
 }
 
+// Kept in sync with MAX_HISTORY_MESSAGES in api/chat.js: capping the window sent per
+// request is what makes the server's prompt cache (and this fetch) fast — sending the
+// full, ever-growing history every turn is the slow path.
+const MAX_HISTORY_MESSAGES = 30;
+
+function extractPartialReply(raw){
+  const m = raw.match(/"reply"\s*:\s*"((?:[^"\\]|\\.)*)"/);
+  if(!m) return null;
+  try{ return JSON.parse('"'+m[1]+'"'); }catch(e){ return null; }
+}
+
 async function sendRoarieMessage(){
   const input = document.getElementById('chatInput');
   const query = input.value.trim();
@@ -912,6 +923,7 @@ async function sendRoarieMessage(){
 
   roarieMessages.push({ role:'user', content: query });
   renderRoarieLog();
+  loadingMsg.textContent = 'Roarie is asking around campus...';
   loadingMsg.style.display = 'block';
   saveRoarieChat();
 
@@ -921,14 +933,42 @@ async function sendRoarieMessage(){
   if(activeFilters.has('w5')) filterText.push('less than a 5 minute walk from Columbia University (116th & Broadway)');
   if(activeFilters.has('w10')) filterText.push('less than a 10 minute walk from Columbia University (116th & Broadway)');
 
+  const historyToSend = roarieMessages.slice(-MAX_HISTORY_MESSAGES);
+  let raw = '';
+  let sawError = null;
+
   try{
     const resp = await fetch("/api/chat", {
       method:"POST",
       headers:{"Content-Type":"application/json"},
-      body: JSON.stringify({ messages: roarieMessages, filters: filterText })
+      body: JSON.stringify({ messages: historyToSend, filters: filterText })
     });
-    const data = await resp.json();
-    const replyText = data.text || '{"reply":"Sorry, I couldn\'t come up with anything just now — try again?","recommendations":[]}';
+    if(!resp.ok || !resp.body) throw new Error('bad response');
+
+    const reader = resp.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = '';
+    while(true){
+      const { done, value } = await reader.read();
+      if(done) break;
+      buf += decoder.decode(value, { stream:true });
+      const parts = buf.split('\n\n');
+      buf = parts.pop();
+      for(const part of parts){
+        const line = part.split('\n').find(l=>l.startsWith('data: '));
+        if(!line) continue;
+        let evt;
+        try{ evt = JSON.parse(line.slice(6)); }catch(e){ continue; }
+        if(evt.error){ sawError = evt.error; continue; }
+        if(evt.text){
+          raw += evt.text;
+          const partial = extractPartialReply(raw);
+          if(partial) loadingMsg.textContent = partial;
+        }
+      }
+    }
+    if(sawError && !raw) throw new Error(sawError);
+    const replyText = raw || '{"reply":"Sorry, I couldn\'t come up with anything just now — try again?","recommendations":[]}';
     roarieMessages.push({ role:'assistant', content: replyText });
   }catch(e){
     roarieMessages.push({ role:'assistant', content: '{"reply":"Something went wrong reaching me — try again in a moment.","recommendations":[]}' });

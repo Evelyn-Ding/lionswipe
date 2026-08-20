@@ -60,7 +60,18 @@ Roarie" on top, "Enter Your Own Meal" below.
   panel rather than duplicating its markup/logic
 
 ## Open Questions
-- With no cap on conversation length, unbounded history sent to the model on every turn
-  could get slow/expensive in a long session — revisit if it becomes a real problem
 - Roarie's persona/voice needs an actual system prompt written (tone, personality,
   boundaries) — not yet drafted
+
+## Resolved
+- Conversation length is capped at `MAX_HISTORY_MESSAGES` (30, kept in sync between
+  `index.html` and `api/chat.js`) before each turn is sent to Claude. The cap is
+  intentionally generous rather than aggressive so the message prefix stays stable
+  turn-to-turn, which lets Anthropic's prompt cache (`cache_control` on the
+  second-to-last message in `api/chat.js`) actually get hits as a session grows.
+- Responses stream token-by-token over SSE (`api/chat.js` as a Vercel Edge Function)
+  instead of waiting for the full reply + verified menu searches to finish, so the
+  "Roarie is asking around campus..." status updates live with the reply text as it's
+  generated.
+- Identical back-to-back requests (e.g. a double-tapped send) are served from a
+  short-lived (20s) in-memory cache in `api/chat.js` instead of re-hitting Claude.
