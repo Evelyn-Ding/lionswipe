@@ -23,4 +23,6 @@ scripts/scrape-output/
 # Hackathon demo account setup notes (contains a login password) — delete once done
 DEMO_ACCOUNT_REVERT.md
 seed_demo_account.sql
+seed_demo_account_extra.sql
+seed_fake_market_listings.sql
 swipe_market_schema.sql
