@@ -554,6 +554,23 @@
   </div>
 </div>
 
+<div class="overlay" id="repostOverlay">
+  <div class="modal util" style="max-width:380px;text-align:left;">
+    <h3 style="text-align:center;">Repost Listing</h3>
+    <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">The meeting window passed before anyone claimed this listing. Pick a new time and it'll go live again — defaults to the same time tomorrow.</p>
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Meeting window starts</label>
+    <input class="authField" id="repostMeetStart" type="datetime-local">
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Meeting window ends</label>
+    <input class="authField" id="repostMeetEnd" type="datetime-local">
+
+    <div class="err" id="repostErr" style="display:none;"></div>
+    <button class="btn solid" id="repostSubmit" style="width:100%;">Repost Listing</button>
+    <div style="margin-top:14px;text-align:center;"><button class="btn" id="repostCancel">Cancel</button></div>
+  </div>
+</div>
+
 <div class="overlay" id="claimOverlay">
   <div class="modal util">
     <h3 id="claimTitle">Confirm</h3>
@@ -1736,6 +1753,9 @@ function renderMyListingCard(l){
   const buttons = (l.status==='active' && !expired)
     ? `<button class="btn util" data-action="complete" data-id="${l.id}" style="font-size:11px;padding:5px 10px;">Mark Complete</button>
        <button class="btn danger util" data-action="delete" data-id="${l.id}" style="font-size:11px;padding:5px 10px;">Delete</button>`
+    : (l.status==='active' && expired)
+    ? `<button class="btn util" data-action="repost" data-id="${l.id}" style="font-size:11px;padding:5px 10px;">Repost</button>
+       <button class="btn danger util" data-action="delete" data-id="${l.id}" style="font-size:11px;padding:5px 10px;">Delete</button>`
     : `<button class="btn danger util" data-action="delete" data-id="${l.id}" style="font-size:11px;padding:5px 10px;">Delete</button>`;
   return `<div class="listingCard mine">
     <div class="lPrice">$${l.price_per_swipe.toFixed(2)}<small>per swipe</small></div>
@@ -1832,6 +1852,11 @@ document.getElementById('listingGrid').onclick = async (e)=>{
     if(action === 'cancel'){
       if(!confirm("Cancel this agreement? Both of you will be notified, and the swipes go back up for grabs.")) return;
       await cancelAgreement(id);
+      return;
+    }
+    if(action === 'repost'){
+      const listing = marketListings.find(l=>l.id===id);
+      if(listing) openRepostModal(listing);
       return;
     }
     let error;
@@ -2146,6 +2171,68 @@ document.getElementById('listingSubmit').onclick = async ()=>{
     return;
   }
   listingOverlay.classList.remove('show');
+  await loadListings();
+  renderListingGrid();
+};
+
+// datetime-local inputs want "YYYY-MM-DDTHH:mm" in the browser's local time
+// (no timezone/seconds) — Date#toISOString() is UTC, so it can't be used here.
+function toDatetimeLocalValue(d){
+  const pad = n => String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+const repostOverlay = document.getElementById('repostOverlay');
+let repostListingId = null;
+
+// Defaults the new window to the same time of day, one day later, keeping the
+// listing's original duration — the common case is "I just missed my slot,
+// same plan works tomorrow" rather than picking a whole new window from scratch.
+function openRepostModal(listing){
+  repostListingId = listing.id;
+  const origStart = new Date(listing.meeting_start);
+  const origEnd = new Date(listing.meeting_end);
+  const duration = origEnd.getTime() - origStart.getTime();
+  const defaultStart = new Date(origStart.getTime() + 24*3600*1000);
+  const defaultEnd = new Date(defaultStart.getTime() + duration);
+  document.getElementById('repostMeetStart').value = toDatetimeLocalValue(defaultStart);
+  document.getElementById('repostMeetEnd').value = toDatetimeLocalValue(defaultEnd);
+  document.getElementById('repostErr').style.display = 'none';
+  repostOverlay.classList.add('show');
+}
+document.getElementById('repostCancel').onclick = ()=> repostOverlay.classList.remove('show');
+
+document.getElementById('repostSubmit').onclick = async ()=>{
+  const errEl = document.getElementById('repostErr');
+  const meetStartRaw = document.getElementById('repostMeetStart').value;
+  const meetEndRaw = document.getElementById('repostMeetEnd').value;
+  const meetStart = meetStartRaw ? new Date(meetStartRaw) : null;
+  const meetEnd = meetEndRaw ? new Date(meetEndRaw) : null;
+  if(!meetStart || !meetEnd || isNaN(meetStart.getTime()) || isNaN(meetEnd.getTime())){
+    errEl.textContent = 'Please enter when you\'ll meet (both a start and end time).';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(meetStart.getTime() < Date.now() - 60000){
+    errEl.textContent = 'The meeting window can\'t start in the past.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(meetEnd.getTime() - meetStart.getTime() < 15*60000){
+    errEl.textContent = 'The meeting window needs to be at least 15 minutes long.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const { error } = await supabase.from('swipe_listings').update({
+    meeting_start: meetStart.toISOString(), meeting_end: meetEnd.toISOString(), updated_at: new Date().toISOString()
+  }).eq('id', repostListingId);
+  if(error){
+    console.error(error);
+    errEl.textContent = 'Could not repost that listing — try again.';
+    errEl.style.display = 'block';
+    return;
+  }
+  repostOverlay.classList.remove('show');
   await loadListings();
   renderListingGrid();
 };
