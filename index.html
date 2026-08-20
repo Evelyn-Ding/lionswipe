@@ -25,6 +25,7 @@
     --font-body:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;
     --danger-bg:#FDEDEA;
     --success:#4a7a4a;
+    --success-bg:#EAF3EA;
   }
   [data-theme="dark"]{
     --navy:#FFFFFF;
@@ -52,10 +53,12 @@
 
   /* ---- Header ---- */
   header{display:flex;justify-content:space-between;align-items:flex-start;padding-bottom:16px;border-bottom:2px solid var(--navy);margin-bottom:22px;}
-  .clock{flex:1 1 0;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);opacity:.75;}
+  .headerLeft{flex:1 1 0;display:flex;flex-direction:column;align-items:flex-start;gap:10px;min-width:190px;}
+  .clock{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--navy);opacity:.75;}
   .clock .time{font-size:20px;font-weight:600;display:block;margin-top:2px;letter-spacing:0;text-transform:none;}
   .semesterLine{margin-top:8px;font-size:11.5px;color:var(--muted);text-transform:none;letter-spacing:0;}
   .semesterLine b{color:var(--navy);}
+  .marketNudge{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:11.5px;font-weight:600;margin-top:6px;max-width:200px;line-height:1.4;color:var(--muted);}
   .brand{text-align:center;flex:1;}
   .brand h1{margin:0;font-size:40px;font-weight:800;letter-spacing:-.01em;color:var(--navy);}
   .brand .subtitle{font-family:var(--font-body);font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-top:2px;}
@@ -188,6 +191,54 @@
   #mainPage.hide{display:none;}
   .backBtn{margin-bottom:16px;}
   .breakdownSub{font-size:11px;letter-spacing:.04em;color:var(--muted);margin-bottom:18px;}
+
+  /* ---- Swipe Market page ---- */
+  #marketPage{display:none;}
+  #marketPage.show{display:block;}
+  .marketHead{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:6px;}
+  .marketIntro{color:var(--muted);font-size:13px;max-width:520px;margin:0 0 18px;line-height:1.5;}
+  .marketTabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;}
+  .marketTab{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;font-weight:600;padding:8px 18px;border-radius:20px;border:1.5px solid var(--navy);background:transparent;color:var(--navy);}
+  .marketTab.active{background:var(--navy);color:var(--primary-fg);}
+  .listingGrid{display:flex;flex-direction:column;gap:12px;margin-bottom:24px;}
+  .listingCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px 18px;display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;transition:.15s;}
+  .listingCard.mine{border-color:var(--navy);background:var(--columbia-blue);}
+  .listingCard.claimable{cursor:pointer;}
+  .listingCard.claimable:hover{border-color:var(--navy);box-shadow:0 3px 10px rgba(86,84,134,.12);}
+  .listingCard .lPrice{font-family:var(--font-display);font-size:24px;font-weight:700;color:var(--navy);white-space:nowrap;}
+  .listingCard .lPrice small{display:block;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;}
+  .listingCard .lInfo{flex:1;min-width:180px;}
+  .listingCard .lQty{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:14px;font-weight:700;color:var(--ink);}
+  .listingCard .lNote{font-size:13px;color:var(--ink);margin-top:4px;line-height:1.4;}
+  .listingCard .lMeeting{font-size:12.5px;color:var(--navy);font-weight:600;margin-top:4px;}
+  .listingCard .lPayment{font-size:12px;color:var(--muted);margin-top:4px;}
+  .listingCard .lMeta{font-size:11px;color:var(--muted);margin-top:6px;}
+  .listingCard .lActions{display:flex;flex-direction:column;gap:6px;align-items:flex-end;min-width:120px;}
+  .listingCard .lContact{font-size:12.5px;color:var(--navy);font-weight:600;text-align:right;}
+  .listingCard .statusTag{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:2px 8px;border-radius:10px;background:var(--secondary);color:var(--muted);}
+  .listingCard .statusTag.completed{color:var(--success);}
+  .listingCard .statusTag.expired{color:var(--danger);}
+  .listingCard .statusTag.agreement{color:var(--success);}
+  .listingCard.agreement{border-color:var(--success);background:var(--success-bg);}
+  .listingCard.agreementCancelled{opacity:.6;}
+  .listingEmpty{text-align:center;color:var(--muted);font-size:13px;padding:34px 0;}
+  .tabBadge{display:inline-block;min-width:16px;height:16px;padding:0 4px;margin-left:5px;border-radius:8px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;vertical-align:2px;}
+  .msgList{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin:10px 0;padding-right:2px;}
+  .msgBubble{max-width:82%;padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.4;word-wrap:break-word;}
+  .msgBubble.mine{align-self:flex-end;background:var(--navy);color:var(--primary-fg);border-bottom-right-radius:4px;}
+  .msgBubble.theirs{align-self:flex-start;background:var(--secondary);color:var(--ink);border-bottom-left-radius:4px;}
+  .msgBubble.system{align-self:center;background:transparent;color:var(--muted);font-size:11px;font-style:italic;text-align:center;max-width:100%;padding:2px 0;}
+  .msgInputRow{display:flex;gap:8px;}
+  .msgInputRow input{flex:1;margin-bottom:0;}
+  .msgEmpty{text-align:center;color:var(--muted);font-size:12.5px;padding:24px 0;}
+  .marketGate{text-align:center;color:var(--muted);font-size:13px;padding:34px 0;}
+  .typeToggle{display:flex;gap:8px;margin-bottom:14px;}
+  .typeToggleBtn{flex:1;font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:13px;font-weight:700;padding:10px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;}
+  .typeToggleBtn.selected{border-color:var(--navy);background:var(--columbia-blue);color:var(--navy);}
+  .paymentToggle{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+  .paymentToggleBtn{font-family:'Figtree',ui-sans-serif,-apple-system,"Segoe UI",Helvetica,Arial,sans-serif;font-size:12px;font-weight:700;padding:7px 12px;border-radius:10px;border:1.5px solid var(--line);background:var(--card);color:var(--muted);cursor:pointer;}
+  .paymentToggleBtn.selected{border-color:var(--navy);background:var(--columbia-blue);color:var(--navy);}
+  textarea.authField{resize:vertical;min-height:60px;font-family:inherit;}
   .statGrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-bottom:30px;}
   .statCard{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px;text-align:center;}
   .statCard .val{font-family:var(--font-display);font-size:32px;color:var(--navy);font-weight:700;}
@@ -240,6 +291,17 @@
         <div class="semesterLine">Semester: <b id="semesterTerm">--</b></div>
         <div class="semesterLine">Weeks total in semester: <b id="semesterWeeksTotal">--</b></div>
         <div class="semesterLine">Weeks until semester end: <b id="semesterWeeksLeft">--</b></div>
+      <div class="headerLeft">
+        <div class="clock util">
+          Columbia Time (ET)
+          <span class="time" id="clockTime">--:--</span>
+          <div id="clockDate"></div>
+          <div class="semesterLine">Days until semester end: <b id="semesterDays">--</b></div>
+        </div>
+        <div>
+          <button class="btn util" id="marketBtn">Swipe Market &rarr;</button>
+          <div class="marketNudge util">Buy and sell swipes here!</div>
+        </div>
       </div>
       <div class="brand">
         <h1>LionSwipe<!-- <img class="brandIcon" src="assets/lion-logo.png" alt="LionSwipe lion logo"> --></h1>
@@ -331,6 +393,31 @@
     </div>
   </div>
 
+  <!-- ================= SWIPE MARKET PAGE ================= -->
+  <div id="marketPage">
+    <button class="btn backBtn util" id="marketBackBtn">&larr; Back to LionSwipe</button>
+    <div class="marketHead">
+      <h2 style="color:var(--navy);font-weight:800;margin:0;">Swipe Market</h2>
+      <button class="btn solid util" id="postListingBtn">+ Post a Listing</button>
+    </div>
+    <p class="marketIntro util">Buy or sell meal swipes with other Columbia/Barnard students. Click a listing to claim it and communicate with the lister</p>
+
+    <div id="marketSignedOut" class="marketGate util" style="display:none;">
+      Log in with your @columbia.edu / @barnard.edu email to browse and post listings.
+    </div>
+
+    <div id="marketSignedIn" style="display:none;">
+      <div id="marketExpiredBanner" class="configWarning" style="display:none;"></div>
+      <div class="marketTabs util" id="marketTabs">
+        <button type="button" class="marketTab active" data-tab="buy">Buy Swipes</button>
+        <button type="button" class="marketTab" data-tab="sell">Sell Swipes</button>
+        <button type="button" class="marketTab" data-tab="mine">My History</button>
+        <button type="button" class="marketTab" data-tab="matches">Matches<span class="tabBadge" id="matchesUnreadBadge" style="display:none;"></span></button>
+      </div>
+      <div class="listingGrid" id="listingGrid"></div>
+    </div>
+  </div>
+
 </div>
 
 <!-- ===== Overlays ===== -->
@@ -377,7 +464,7 @@
 </div>
 
 <div class="overlay" id="planOverlay">
-  <div class="modal util" style="max-width:380px;">
+  <div class="modal util" style="max-width:380px;max-height:85vh;overflow-y:auto;">
     <h3 id="planTitle">Profile</h3>
 
     <div class="settingsTabs" id="settingsTabs">
@@ -423,6 +510,81 @@
     <div class="err" id="planErr" style="display:none;"></div>
     <button class="btn solid" id="planSubmit" style="width:100%;">Save Profile</button>
     <div style="margin-top:14px;" id="planCancelWrap"><button class="btn" id="planCancel">Cancel</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="listingOverlay">
+  <div class="modal util" style="max-width:380px;text-align:left;max-height:85vh;overflow-y:auto;">
+    <h3 id="listingTitle" style="text-align:center;">Post a Listing</h3>
+
+    <div class="typeToggle">
+      <button type="button" class="typeToggleBtn selected" id="listingTypeSell" data-type="sell">I'm Selling</button>
+      <button type="button" class="typeToggleBtn" id="listingTypeBuy" data-type="buy">I'm Buying</button>
+    </div>
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Number of swipes</label>
+    <input class="authField" id="listingQuantity" type="number" min="1" step="1" placeholder="e.g. 10">
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Price per swipe ($)</label>
+    <input class="authField" id="listingPrice" type="number" min="0" step="0.01" placeholder="e.g. 6.50">
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">How would you like to pay/be paid? (pick one or more)</label>
+    <div class="paymentToggle" id="listingPaymentMethods">
+      <button type="button" class="paymentToggleBtn" data-method="venmo">Venmo</button>
+      <button type="button" class="paymentToggleBtn" data-method="paypal">PayPal</button>
+      <button type="button" class="paymentToggleBtn" data-method="cash">Cash</button>
+      <button type="button" class="paymentToggleBtn" data-method="zelle">Zelle</button>
+    </div>
+
+    <p style="font-size:11px;color:var(--muted);margin:0 0 8px;">Swipes can only be transferred by swiping the other person in together, so pick a dining hall and a time window to meet (at least 15 minutes).</p>
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Meeting location</label>
+    <input class="authField" id="listingLocation" placeholder="e.g. John Jay entrance">
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Meeting window starts</label>
+    <input class="authField" id="listingMeetStart" type="datetime-local">
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Meeting window ends</label>
+    <input class="authField" id="listingMeetEnd" type="datetime-local">
+
+    <label style="display:block;font-size:12px;color:var(--muted);margin-bottom:4px;">Note (optional)</label>
+    <textarea class="authField" id="listingNote" placeholder="e.g. Willing to split into smaller batches"></textarea>
+
+    <p style="font-size:11px;color:var(--muted);margin:0 0 0;">Your school email (<span id="listingContactPreview" style="font-weight:600;"></span>) is shown to other students automatically — no contact info to enter.</p>
+
+    <div class="err" id="listingErr" style="display:none;"></div>
+    <button class="btn solid" id="listingSubmit" style="width:100%;">Post Listing</button>
+    <div style="margin-top:14px;text-align:center;"><button class="btn" id="listingCancel">Cancel</button></div>
+  </div>
+</div>
+
+<div class="overlay" id="claimOverlay">
+  <div class="modal util">
+    <h3 id="claimTitle">Confirm</h3>
+    <div id="claimSummary" style="font-size:13.5px;color:var(--ink);text-align:left;line-height:1.7;margin-bottom:4px;"></div>
+    <div class="counter" id="claimCounterWrap">
+      <button id="claimMinus">&minus;</button>
+      <div class="n" id="claimQty">1</div>
+      <button id="claimPlus">+</button>
+    </div>
+    <div class="err" id="claimErr" style="display:none;"></div>
+    <div class="row">
+      <button class="btn solid" id="claimConfirm">Confirm</button>
+      <button class="btn" id="claimCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="messageOverlay">
+  <div class="modal util" style="max-width:380px;">
+    <h3 id="messageTitle" style="margin-bottom:2px;">Message</h3>
+    <p id="messageSubtitle" style="font-size:12px;color:var(--muted);margin:0 0 10px;"></p>
+    <div class="msgList" id="msgList"></div>
+    <div class="msgInputRow">
+      <input class="authField" id="msgInput" placeholder="Type a message..." style="margin-bottom:0;">
+      <button class="btn solid" id="msgSendBtn" style="white-space:nowrap;">Send</button>
+    </div>
+    <div style="margin-top:14px;text-align:center;"><button class="btn" id="messageClose">Close</button></div>
   </div>
 </div>
 
@@ -1365,6 +1527,7 @@ function updateSwipesSummary(){
       authMode = 'signup'; renderAuth(); loginOverlay.classList.add('show');
     };
   }
+
 }
 
 /* ---------------- Breakdown page ---------------- */
@@ -1376,6 +1539,630 @@ document.getElementById('breakdownBtn').onclick = ()=>{
 document.getElementById('backBtn').onclick = ()=>{
   document.getElementById('breakdownPage').classList.remove('show');
   document.getElementById('mainPage').classList.remove('hide');
+};
+
+/* ---------------- Swipe Market page ---------------- */
+// Requires a real account end-to-end (no guest/localStorage mode like logs have) —
+// a listing is only useful if it can be matched with a real person to contact, and
+// RLS on swipe_listings is locked to `authenticated` (see schema.sql).
+const MARKET_SKIP_LOGIN_GATE = false;
+// Sample listings/matches, only ever used when MARKET_SKIP_LOGIN_GATE is true
+// (local UI preview without a working Supabase login).
+const MARKET_SAMPLE_LISTINGS = [
+  { id:'sample-1', user_id:'sample-user-1', type:'sell', quantity:12, price_per_swipe:6.00, note:"Graduating early, need these gone before finals week!", contact_email:'lf2234@columbia.edu', payment_methods:['venmo','zelle'], status:'active', meeting_location:'Ferris Booth Commons entrance', meeting_start:new Date(Date.now()+1*24*3600*1000).toISOString(), meeting_end:new Date(Date.now()+1*24*3600*1000+30*60*1000).toISOString(), created_at:new Date(Date.now()-2*3600*1000).toISOString() },
+  { id:'sample-2', user_id:'sample-user-2', type:'sell', quantity:5, price_per_swipe:5.25, note:null, contact_email:'ab4455@barnard.edu', payment_methods:['cash'], status:'active', meeting_location:"JJ's Place", meeting_start:new Date(Date.now()+2*3600*1000).toISOString(), meeting_end:new Date(Date.now()+2*3600*1000+20*60*1000).toISOString(), created_at:new Date(Date.now()-26*3600*1000).toISOString() },
+  { id:'sample-3', user_id:'sample-user-3', type:'sell', quantity:20, price_per_swipe:6.75, note:"Can split into two meetups if needed", contact_email:'cc3344@columbia.edu', payment_methods:['venmo','paypal','zelle'], status:'active', meeting_location:'John Jay Dining Hall', meeting_start:new Date(Date.now()+2*24*3600*1000).toISOString(), meeting_end:new Date(Date.now()+2*24*3600*1000+45*60*1000).toISOString(), created_at:new Date(Date.now()-3*24*3600*1000).toISOString() },
+  { id:'sample-4', user_id:'sample-user-4', type:'buy', quantity:8, price_per_swipe:6.50, note:'Ran out early this semester, need swipes ASAP', contact_email:'jd3456@columbia.edu', payment_methods:['venmo'], status:'active', meeting_location:"Chef Mike's Sub Shop", meeting_start:new Date(Date.now()+5*3600*1000).toISOString(), meeting_end:new Date(Date.now()+5*3600*1000+15*60*1000).toISOString(), created_at:new Date(Date.now()-5*3600*1000).toISOString() },
+  { id:'sample-5', user_id:'sample-user-5', type:'buy', quantity:15, price_per_swipe:5.75, note:null, contact_email:'bb5566@barnard.edu', payment_methods:['cash','zelle'], status:'active', meeting_location:'Hewitt Dining', meeting_start:new Date(Date.now()+3*24*3600*1000).toISOString(), meeting_end:new Date(Date.now()+3*24*3600*1000+30*60*1000).toISOString(), created_at:new Date(Date.now()-1.5*24*3600*1000).toISOString() },
+  { id:'sample-6', user_id:'preview-user', type:'sell', quantity:10, price_per_swipe:6.25, note:'Meet outside Ferris', contact_email:'you@columbia.edu', payment_methods:['venmo','cash'], status:'active', meeting_location:'Ferris Booth Commons entrance', meeting_start:new Date(Date.now()-3*3600*1000).toISOString(), meeting_end:new Date(Date.now()-2.5*3600*1000).toISOString(), created_at:new Date(Date.now()-24*3600*1000).toISOString() },
+  { id:'sample-7', user_id:'preview-user', type:'buy', quantity:6, price_per_swipe:5.50, note:null, contact_email:'you@columbia.edu', payment_methods:['paypal'], status:'active', meeting_location:'John Jay Dining Hall', meeting_start:new Date(Date.now()+1*24*3600*1000).toISOString(), meeting_end:new Date(Date.now()+1*24*3600*1000+20*60*1000).toISOString(), created_at:new Date(Date.now()-4*3600*1000).toISOString() },
+];
+const MARKET_SAMPLE_MATCHES = [
+  { id:'match-1', listing_id:'sample-past-1', listing_type:'sell', poster_id:'preview-user', claimer_id:'sample-user-9', poster_email:'you@columbia.edu', claimer_email:'wl7788@columbia.edu', quantity:3, price_per_swipe:6.00, payment_methods:['venmo','cash'], meeting_location:'Ferris Booth Commons entrance', meeting_start:new Date(Date.now()+6*3600*1000).toISOString(), meeting_end:new Date(Date.now()+6*3600*1000+20*60*1000).toISOString(), status:'active', created_at:new Date(Date.now()-1*3600*1000).toISOString() },
+  { id:'match-2', listing_id:'sample-past-2', listing_type:'buy', poster_id:'preview-user', claimer_id:'sample-user-10', poster_email:'you@columbia.edu', claimer_email:'rk1122@barnard.edu', quantity:2, price_per_swipe:5.50, payment_methods:['zelle'], meeting_location:"JJ's Place", meeting_start:new Date(Date.now()-30*3600*1000).toISOString(), meeting_end:new Date(Date.now()-29.5*3600*1000).toISOString(), status:'cancelled', created_at:new Date(Date.now()-31*3600*1000).toISOString() },
+  { id:'match-3', listing_id:'sample-past-3', listing_type:'sell', poster_id:'sample-user-11', claimer_id:'preview-user', poster_email:'ep2233@columbia.edu', claimer_email:'you@columbia.edu', quantity:4, price_per_swipe:6.25, payment_methods:['venmo'], meeting_location:'Fac House entrance', meeting_start:new Date(Date.now()-72*3600*1000).toISOString(), meeting_end:new Date(Date.now()-71.5*3600*1000).toISOString(), status:'active', created_at:new Date(Date.now()-73*3600*1000).toISOString() },
+];
+const MARKET_SAMPLE_MESSAGES = {
+  'match-1': [
+    { id:'msg-1', match_id:'match-1', sender_id:'sample-user-9', recipient_id:'preview-user', body:"Hey, still good for 6pm at Ferris?", is_system:false, created_at:new Date(Date.now()-40*60*1000).toISOString() },
+    { id:'msg-2', match_id:'match-1', sender_id:'preview-user', recipient_id:'sample-user-9', body:"Yep, see you outside John Jay entrance", is_system:false, created_at:new Date(Date.now()-35*60*1000).toISOString() },
+  ],
+  'match-2': [
+    { id:'msg-3', match_id:'match-2', sender_id:'preview-user', recipient_id:'sample-user-10', body:'you@columbia.edu cancelled this agreement.', is_system:true, created_at:new Date(Date.now()-29*3600*1000).toISOString() },
+  ],
+};
+const PAYMENT_METHOD_LABELS = { venmo:'Venmo', paypal:'PayPal', cash:'Cash', zelle:'Zelle' };
+function fmtPaymentMethods(methods){
+  return (methods || []).map(m=>PAYMENT_METHOD_LABELS[m] || m).join(' · ');
+}
+let marketListings = [];
+let marketMatches = [];
+let marketTab = 'buy'; // 'buy' = browse others' sell listings, 'sell' = browse others' buy listings, 'mine' = your own, 'matches' = confirmed matches
+let editingListingType = 'sell';
+let editingPaymentMethods = []; // payment methods selected in the listing form
+let claimListing = null; // the listing currently open in the claim confirmation modal
+let messageMatchId = null; // the match whose thread is open in #messageOverlay
+let messageCounterpartId = null; // the other participant of that match
+const messageOverlay = document.getElementById('messageOverlay');
+
+function escapeHtml(s){
+  return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+document.getElementById('marketBtn').onclick = ()=>{
+  document.getElementById('mainPage').classList.add('hide');
+  document.getElementById('marketPage').classList.add('show');
+  renderMarket();
+};
+document.getElementById('marketBackBtn').onclick = ()=>{
+  document.getElementById('marketPage').classList.remove('show');
+  document.getElementById('mainPage').classList.remove('hide');
+};
+
+async function renderMarket(){
+  const signedOut = document.getElementById('marketSignedOut');
+  const signedIn = document.getElementById('marketSignedIn');
+  document.getElementById('postListingBtn').style.display = (currentUser || MARKET_SKIP_LOGIN_GATE) ? 'inline-block' : 'none';
+  if(!currentUser && !MARKET_SKIP_LOGIN_GATE){
+    signedOut.style.display = 'block';
+    signedIn.style.display = 'none';
+    signedOut.innerHTML = `Log in with your @columbia.edu / @barnard.edu email to browse and post listings. <a href="#" id="marketSignInLink">Log in / sign up</a>`;
+    document.getElementById('marketSignInLink').onclick = (e)=>{
+      e.preventDefault();
+      authMode = 'login'; renderAuth(); loginOverlay.classList.add('show');
+    };
+    return;
+  }
+  signedOut.style.display = 'none';
+  signedIn.style.display = 'block';
+  await Promise.all([loadListings(), loadMatches()]);
+  renderListingGrid();
+  updateUnreadBadge();
+}
+
+async function loadListings(){
+  if(MARKET_SKIP_LOGIN_GATE && !currentUser){ marketListings = MARKET_SAMPLE_LISTINGS; return; }
+  if(!supabase || !currentUser){ marketListings = []; return; }
+  const { data, error } = await supabase.from('swipe_listings').select('*').order('created_at', {ascending:false});
+  if(error){ console.error(error); marketListings = []; return; }
+  marketListings = data;
+}
+
+async function loadMatches(){
+  if(MARKET_SKIP_LOGIN_GATE && !currentUser){ marketMatches = MARKET_SAMPLE_MATCHES; return; }
+  if(!supabase || !currentUser){ marketMatches = []; return; }
+  const { data, error } = await supabase.from('swipe_matches').select('*').order('created_at', {ascending:false});
+  if(error){ console.error(error); marketMatches = []; return; }
+  marketMatches = data;
+}
+
+document.getElementById('marketTabs').onclick = (e)=>{
+  const btn = e.target.closest('.marketTab');
+  if(!btn) return;
+  marketTab = btn.dataset.tab;
+  document.querySelectorAll('.marketTab').forEach(t=>t.classList.toggle('active', t===btn));
+  renderListingGrid();
+};
+
+function isExpired(l){
+  return !!l.meeting_end && new Date(l.meeting_end) < new Date();
+}
+
+function fmtMeetingWindow(l){
+  if(!l.meeting_start || !l.meeting_end) return '';
+  const start = new Date(l.meeting_start), end = new Date(l.meeting_end);
+  const dateFmt = new Intl.DateTimeFormat('en-US', {weekday:'short', month:'short', day:'numeric'});
+  const timeFmt = new Intl.DateTimeFormat('en-US', {hour:'numeric', minute:'2-digit'});
+  const sameDay = start.toDateString() === end.toDateString();
+  return sameDay
+    ? `${dateFmt.format(start)} &middot; ${timeFmt.format(start)}&ndash;${timeFmt.format(end)}`
+    : `${dateFmt.format(start)} ${timeFmt.format(start)} &ndash; ${dateFmt.format(end)} ${timeFmt.format(end)}`;
+}
+
+function renderListingGrid(){
+  const myId = currentUser ? currentUser.id : (MARKET_SKIP_LOGIN_GATE ? 'preview-user' : null);
+
+  // Lets the poster know their meeting window passed — the whole point of
+  // requiring one is that swipes can only change hands in person, so a listing
+  // whose window already lapsed needs the owner's attention (repost or delete),
+  // and isn't actionable for anyone else browsing.
+  const banner = document.getElementById('marketExpiredBanner');
+  const expiredMine = marketListings.filter(l=>l.user_id===myId && l.status==='active' && isExpired(l));
+  if(expiredMine.length > 0){
+    banner.style.display = 'block';
+    banner.textContent = `${expiredMine.length} of your listing${expiredMine.length===1?'':'s'} expired — the meeting window passed. Check "My History" to repost or delete.`;
+  } else {
+    banner.style.display = 'none';
+  }
+
+  if(marketTab === 'matches'){ renderMatches(myId); return; }
+  if(marketTab === 'mine'){ renderHistoryGrid(myId); return; }
+
+  const grid = document.getElementById('listingGrid');
+  let rows;
+  if(marketTab === 'buy'){
+    // Browsing swipes for sale — cheapest first.
+    rows = marketListings.filter(l=>l.type==='sell' && l.status==='active' && l.user_id!==myId && !isExpired(l))
+      .sort((a,b)=>a.price_per_swipe-b.price_per_swipe);
+  } else {
+    // Browsing buyer requests — highest offer first.
+    rows = marketListings.filter(l=>l.type==='buy' && l.status==='active' && l.user_id!==myId && !isExpired(l))
+      .sort((a,b)=>b.price_per_swipe-a.price_per_swipe);
+  }
+
+  if(rows.length === 0){
+    const emptyMsg = marketTab==='buy' ? 'No one is selling swipes right now — check back later.'
+      : 'No one is looking to buy swipes right now — check back later.';
+    grid.innerHTML = `<div class="listingEmpty">${emptyMsg}</div>`;
+    return;
+  }
+
+  grid.innerHTML = rows.map(l=>{
+    const total = (l.quantity * l.price_per_swipe).toFixed(2);
+    const typeLabel = l.type==='sell' ? 'Selling' : 'Buying';
+    const noteHtml = l.note ? `<div class="lNote">${escapeHtml(l.note)}</div>` : '';
+    const meetingHtml = l.meeting_location ? `<div class="lMeeting">${escapeHtml(l.meeting_location)} &middot; ${fmtMeetingWindow(l)}</div>` : '';
+    const paymentHtml = l.payment_methods && l.payment_methods.length ? `<div class="lPayment">${escapeHtml(fmtPaymentMethods(l.payment_methods))}</div>` : '';
+    const postedAgo = fmtTimeAgo(new Date(l.created_at));
+    return `<div class="listingCard claimable" data-listing-id="${l.id}">
+      <div class="lPrice">$${l.price_per_swipe.toFixed(2)}<small>per swipe</small></div>
+      <div class="lInfo">
+        <div class="lQty">${typeLabel} ${l.quantity} swipe${l.quantity===1?'':'s'} &middot; $${total} total</div>
+        ${meetingHtml}
+        ${paymentHtml}
+        ${noteHtml}
+        <div class="lMeta">Posted ${postedAgo}</div>
+      </div>
+      <div class="lActions"><div class="lContact">${escapeHtml(l.contact_email)}</div></div>
+    </div>`;
+  }).join('');
+}
+
+/* ---- My History: everything the current user has posted, plus everything
+   they've claimed from other people's listings — so someone who has only ever
+   bought (never posted a listing themselves) still sees their past agreements
+   here, not just under the live/actionable Matches tab. Built entirely from
+   data already loaded (marketListings + marketMatches), no extra query. ---- */
+function renderHistoryGrid(myId){
+  const grid = document.getElementById('listingGrid');
+  const myListings = marketListings.filter(l=>l.user_id === myId);
+  const myClaims = marketMatches.filter(m=>m.claimer_id === myId);
+  if(myListings.length === 0 && myClaims.length === 0){
+    grid.innerHTML = `<div class="listingEmpty">You haven't posted or claimed any listings yet.</div>`;
+    return;
+  }
+  const items = [
+    ...myListings.map(l=>({ ts:new Date(l.created_at).getTime(), html:renderMyListingCard(l) })),
+    ...myClaims.map(m=>({ ts:new Date(m.created_at).getTime(), html:renderMyClaimCard(m) })),
+  ].sort((a,b)=>b.ts-a.ts);
+  grid.innerHTML = items.map(i=>i.html).join('');
+}
+
+function renderMyListingCard(l){
+  const expired = isExpired(l);
+  const total = (l.quantity * l.price_per_swipe).toFixed(2);
+  const typeLabel = l.type==='sell' ? 'Selling' : 'Buying';
+  const noteHtml = l.note ? `<div class="lNote">${escapeHtml(l.note)}</div>` : '';
+  const meetingHtml = l.meeting_location ? `<div class="lMeeting">${escapeHtml(l.meeting_location)} &middot; ${fmtMeetingWindow(l)}</div>` : '';
+  const paymentHtml = l.payment_methods && l.payment_methods.length ? `<div class="lPayment">${escapeHtml(fmtPaymentMethods(l.payment_methods))}</div>` : '';
+  const postedAgo = fmtTimeAgo(new Date(l.created_at));
+  const statusClass = l.status==='completed' ? 'completed' : expired ? 'expired' : '';
+  const statusLabel = l.status==='completed' ? 'Completed' : expired ? 'Expired' : 'Active';
+  const buttons = (l.status==='active' && !expired)
+    ? `<button class="btn util" data-action="complete" data-id="${l.id}" style="font-size:11px;padding:5px 10px;">Mark Complete</button>
+       <button class="btn danger util" data-action="delete" data-id="${l.id}" style="font-size:11px;padding:5px 10px;">Delete</button>`
+    : `<button class="btn danger util" data-action="delete" data-id="${l.id}" style="font-size:11px;padding:5px 10px;">Delete</button>`;
+  return `<div class="listingCard mine">
+    <div class="lPrice">$${l.price_per_swipe.toFixed(2)}<small>per swipe</small></div>
+    <div class="lInfo">
+      <div class="lQty">${typeLabel} ${l.quantity} swipe${l.quantity===1?'':'s'} &middot; $${total} total</div>
+      ${meetingHtml}
+      ${paymentHtml}
+      ${noteHtml}
+      <div class="lMeta">Posted ${postedAgo}</div>
+    </div>
+    <div class="lActions"><span class="statusTag ${statusClass}">${statusLabel}</span>${buttons}</div>
+  </div>`;
+}
+
+// listing_type='buy' means the poster wanted to buy, so as the claimer here
+// I'm the one selling to them (mirrors the same flip renderMatches() does).
+function renderMyClaimCard(m){
+  const total = (m.quantity * m.price_per_swipe).toFixed(2);
+  const iAmSelling = m.listing_type === 'buy';
+  const cancelled = m.status === 'cancelled';
+  const pastMeeting = new Date(m.meeting_end) < new Date();
+  const statusClass = cancelled ? '' : (pastMeeting ? 'completed' : 'agreement');
+  const statusLabel = cancelled ? 'Cancelled' : (pastMeeting ? 'Completed' : 'Active Agreement');
+  const cardClass = cancelled ? 'agreementCancelled' : (pastMeeting ? '' : 'agreement');
+  return `<div class="listingCard ${cardClass}">
+    <div class="lPrice">$${m.price_per_swipe.toFixed(2)}<small>per swipe</small></div>
+    <div class="lInfo">
+      <div class="lQty">${iAmSelling?'Selling':'Buying'} ${m.quantity} swipe${m.quantity===1?'':'s'} ${iAmSelling?'to':'from'} ${escapeHtml(m.poster_email)} &middot; $${total} total</div>
+      <div class="lMeeting">${escapeHtml(m.meeting_location)} &middot; ${fmtMeetingWindow(m)}</div>
+      <div class="lPayment">${escapeHtml(fmtPaymentMethods(m.payment_methods))}</div>
+      <div class="lMeta">Claimed ${fmtTimeAgo(new Date(m.created_at))}</div>
+    </div>
+    <div class="lActions"><span class="statusTag ${statusClass}">${statusLabel}</span></div>
+  </div>`;
+}
+
+function renderMatches(myId){
+  const grid = document.getElementById('listingGrid');
+  if(marketMatches.length === 0){
+    grid.innerHTML = `<div class="listingEmpty">No confirmed matches yet — claim a listing, or check back after someone claims yours.</div>`;
+    return;
+  }
+  grid.innerHTML = marketMatches.map(m=>{
+    const iAmPoster = m.poster_id === myId;
+    const counterpartEmail = iAmPoster ? m.claimer_email : m.poster_email;
+    const counterpartId = iAmPoster ? m.claimer_id : m.poster_id;
+    // listing_type='sell' means the poster was selling; otherwise the poster
+    // wanted to buy and whoever claimed it is the one selling.
+    const iAmSelling = iAmPoster ? m.listing_type==='sell' : m.listing_type==='buy';
+    const total = (m.quantity * m.price_per_swipe).toFixed(2);
+    const cancelled = m.status === 'cancelled';
+    const statusHtml = cancelled
+      ? `<span class="statusTag">Cancelled</span>`
+      : `<span class="statusTag agreement">Active Agreement</span>`;
+    const actionsHtml = cancelled ? '' : `
+        <button class="btn danger util" data-action="cancel" data-id="${m.id}" style="font-size:11px;padding:5px 10px;">Cancel</button>`;
+    return `<div class="listingCard ${cancelled?'agreementCancelled':'agreement'}">
+      <div class="lPrice">$${m.price_per_swipe.toFixed(2)}<small>per swipe</small></div>
+      <div class="lInfo">
+        <div class="lQty">${iAmSelling?'Selling':'Buying'} ${m.quantity} swipe${m.quantity===1?'':'s'} ${iAmSelling?'to':'from'} ${escapeHtml(counterpartEmail)} &middot; $${total} total</div>
+        <div class="lMeeting">${escapeHtml(m.meeting_location)} &middot; ${fmtMeetingWindow(m)}</div>
+        <div class="lPayment">${escapeHtml(fmtPaymentMethods(m.payment_methods))}</div>
+        <div class="lMeta">Matched ${fmtTimeAgo(new Date(m.created_at))}</div>
+      </div>
+      <div class="lActions">
+        ${statusHtml}
+        <button class="btn util" data-action="message" data-id="${m.id}" data-counterpart-id="${counterpartId}" data-counterpart-email="${escapeHtml(counterpartEmail)}" style="font-size:11px;padding:5px 10px;">Message</button>
+        ${actionsHtml}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function fmtTimeAgo(d){
+  const mins = Math.round((Date.now()-d.getTime())/60000);
+  if(mins < 1) return 'just now';
+  if(mins < 60) return `${mins}m ago`;
+  const hrs = Math.round(mins/60);
+  if(hrs < 24) return `${hrs}h ago`;
+  const days = Math.round(hrs/24);
+  if(days < 7) return `${days}d ago`;
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+
+document.getElementById('listingGrid').onclick = async (e)=>{
+  const actionBtn = e.target.closest('button[data-action]');
+  if(actionBtn){
+    const id = actionBtn.dataset.id;
+    const action = actionBtn.dataset.action;
+    if(action === 'message'){
+      openMessageThread(id, actionBtn.dataset.counterpartId, actionBtn.dataset.counterpartEmail);
+      return;
+    }
+    if(action === 'cancel'){
+      if(!confirm("Cancel this agreement? Both of you will be notified, and the swipes go back up for grabs.")) return;
+      await cancelAgreement(id);
+      return;
+    }
+    let error;
+    if(action === 'complete'){
+      ({ error } = await supabase.from('swipe_listings').update({ status:'completed', updated_at:new Date().toISOString() }).eq('id', id));
+    } else if(action === 'delete'){
+      if(!confirm('Delete this listing?')) return;
+      ({ error } = await supabase.from('swipe_listings').delete().eq('id', id));
+    }
+    if(error){ console.error(error); alert('Could not update that listing — try again.'); return; }
+    await loadListings();
+    renderListingGrid();
+    return;
+  }
+  const card = e.target.closest('.listingCard.claimable[data-listing-id]');
+  if(card) openClaimModal(card.dataset.listingId);
+};
+
+/* ---- Cancelling an active agreement: either participant can back out before
+   the meetup happens. Calls cancel_swipe_match() (schema.sql), which restores
+   the claimed quantity onto the listing (reopening it to everyone if it had
+   been fully claimed) and drops a system message into the shared thread for
+   the other participant — that message is what "notifies" them, since there's
+   no email/push service. ---- */
+async function cancelAgreement(matchId){
+  if(MARKET_SKIP_LOGIN_GATE && !currentUser && String(matchId).startsWith('match-')){
+    const m = marketMatches.find(x=>x.id===matchId);
+    if(m) m.status = 'cancelled';
+    renderListingGrid();
+    return;
+  }
+  const { error } = await supabase.rpc('cancel_swipe_match', { p_match_id: matchId });
+  if(error){ console.error(error); alert(error.message || 'Could not cancel this agreement — try again.'); return; }
+  await Promise.all([loadListings(), loadMatches(), refreshLogs()]);
+  renderListingGrid();
+}
+
+/* ---- Messaging: one thread per match, only ever between that match's poster
+   and claimer (see the swipe_messages RLS policies). No realtime — messages
+   are (re)loaded when the thread is opened, same lightweight polling-on-open
+   pattern as the rest of Swipe Market (e.g. Matches only refreshes when you
+   switch to that tab). ---- */
+async function openMessageThread(matchId, counterpartId, counterpartEmail){
+  messageMatchId = matchId;
+  messageCounterpartId = counterpartId;
+  document.getElementById('messageSubtitle').textContent = counterpartEmail;
+  document.getElementById('msgInput').value = '';
+  messageOverlay.classList.add('show');
+  await loadAndRenderMessages();
+}
+
+async function loadAndRenderMessages(){
+  const myId = currentUser ? currentUser.id : (MARKET_SKIP_LOGIN_GATE ? 'preview-user' : null);
+  let messages;
+  if(MARKET_SKIP_LOGIN_GATE && !currentUser && String(messageMatchId).startsWith('match-')){
+    messages = MARKET_SAMPLE_MESSAGES[messageMatchId] || [];
+  } else {
+    const { data, error } = await supabase.from('swipe_messages').select('*').eq('match_id', messageMatchId).order('created_at', {ascending:true});
+    if(error){ console.error(error); messages = []; } else { messages = data; }
+    const unreadIds = messages.filter(m=>m.recipient_id===myId && !m.read_at).map(m=>m.id);
+    if(unreadIds.length){
+      await supabase.from('swipe_messages').update({ read_at: new Date().toISOString() }).in('id', unreadIds);
+      updateUnreadBadge();
+    }
+  }
+  renderMessageList(messages, myId);
+}
+
+function renderMessageList(messages, myId){
+  const list = document.getElementById('msgList');
+  if(messages.length === 0){
+    list.innerHTML = `<div class="msgEmpty">No messages yet — say hi and confirm your meetup details.</div>`;
+    return;
+  }
+  list.innerHTML = messages.map(m=>{
+    const cls = m.is_system ? 'system' : (m.sender_id===myId ? 'mine' : 'theirs');
+    return `<div class="msgBubble ${cls}">${escapeHtml(m.body)}</div>`;
+  }).join('');
+  list.scrollTop = list.scrollHeight;
+}
+
+async function sendMessage(){
+  const input = document.getElementById('msgInput');
+  const body = input.value.trim();
+  if(!body || !messageMatchId) return;
+  input.value = '';
+  if(MARKET_SKIP_LOGIN_GATE && !currentUser && String(messageMatchId).startsWith('match-')){
+    const arr = MARKET_SAMPLE_MESSAGES[messageMatchId] || (MARKET_SAMPLE_MESSAGES[messageMatchId] = []);
+    arr.push({ id:'msg-local-'+Date.now(), match_id:messageMatchId, sender_id:'preview-user', recipient_id:messageCounterpartId, body, is_system:false, created_at:new Date().toISOString() });
+    renderMessageList(arr, 'preview-user');
+    return;
+  }
+  const { error } = await supabase.from('swipe_messages').insert({
+    match_id: messageMatchId, sender_id: currentUser.id, recipient_id: messageCounterpartId, body
+  });
+  if(error){ console.error(error); alert('Could not send that message — try again.'); return; }
+  await loadAndRenderMessages();
+}
+document.getElementById('msgSendBtn').onclick = sendMessage;
+document.getElementById('msgInput').addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter'){ e.preventDefault(); sendMessage(); }
+});
+document.getElementById('messageClose').onclick = ()=> messageOverlay.classList.remove('show');
+
+async function updateUnreadBadge(){
+  const badge = document.getElementById('matchesUnreadBadge');
+  let count = 0;
+  if(MARKET_SKIP_LOGIN_GATE && !currentUser){
+    count = Object.values(MARKET_SAMPLE_MESSAGES).flat().filter(m=>m.recipient_id==='preview-user' && !m.read_at).length;
+  } else if(supabase && currentUser){
+    const { data, error } = await supabase.from('swipe_messages').select('id').eq('recipient_id', currentUser.id).is('read_at', null);
+    if(error){ console.error(error); return; }
+    count = data.length;
+  }
+  badge.style.display = count > 0 ? 'inline-block' : 'none';
+  badge.textContent = count;
+}
+
+/* ---- Claim confirmation: click a listing, same counter-then-confirm pattern as
+   logging a dining hall swipe (openSwipeModal above). Confirming calls the
+   claim_swipe_listing() DB function (schema.sql), which atomically records a
+   swipe_matches row — connecting both people's emails + the meetup details — and
+   updates the listing's remaining quantity/status. ---- */
+const claimOverlay = document.getElementById('claimOverlay');
+let claimQty = 1;
+
+function openClaimModal(listingId){
+  claimListing = marketListings.find(l=>l.id === listingId);
+  if(!claimListing) return;
+  claimQty = 1;
+  document.getElementById('claimTitle').textContent = claimListing.type==='sell' ? 'Confirm Purchase' : 'Confirm Sale';
+  renderClaimSummary();
+  document.getElementById('claimCounterWrap').style.display = claimListing.quantity > 1 ? 'flex' : 'none';
+  document.getElementById('claimQty').textContent = claimQty;
+  document.getElementById('claimErr').style.display = 'none';
+  const confirmBtn = document.getElementById('claimConfirm');
+  confirmBtn.disabled = false;
+  confirmBtn.textContent = 'Confirm';
+  confirmBtn.onclick = confirmClaim;
+  document.getElementById('claimCancel').style.display = 'inline-block';
+  claimOverlay.classList.add('show');
+}
+function renderClaimSummary(){
+  const l = claimListing;
+  const total = (claimQty * l.price_per_swipe).toFixed(2);
+  const verb = l.type==='sell' ? 'buying' : 'selling';
+  document.getElementById('claimSummary').innerHTML = `
+    You're ${verb} <b>${claimQty}</b> swipe${claimQty===1?'':'s'} at $${l.price_per_swipe.toFixed(2)}/swipe ($${total} total).<br>
+    <b>${escapeHtml(l.meeting_location)}</b> &middot; ${fmtMeetingWindow(l)}<br>
+    Pays via ${escapeHtml(fmtPaymentMethods(l.payment_methods))}<br>
+    Posted by ${escapeHtml(l.contact_email)}
+  `;
+}
+document.getElementById('claimMinus').onclick = ()=>{
+  claimQty = Math.max(1, claimQty-1);
+  document.getElementById('claimQty').textContent = claimQty;
+  renderClaimSummary();
+};
+document.getElementById('claimPlus').onclick = ()=>{
+  claimQty = Math.min(claimListing.quantity, claimQty+1);
+  document.getElementById('claimQty').textContent = claimQty;
+  renderClaimSummary();
+};
+document.getElementById('claimCancel').onclick = ()=> claimOverlay.classList.remove('show');
+
+async function confirmClaim(){
+  const errEl = document.getElementById('claimErr');
+  errEl.style.display = 'none';
+  const btn = document.getElementById('claimConfirm');
+
+  // Sample listings in preview mode aren't real rows — fake a successful claim
+  // locally instead of calling the (nonexistent) real listing through Supabase.
+  if(MARKET_SKIP_LOGIN_GATE && !currentUser && String(claimListing.id).startsWith('sample')){
+    showClaimSuccess({
+      counterpartEmail: claimListing.contact_email, quantity: claimQty, price_per_swipe: claimListing.price_per_swipe,
+      payment_methods: claimListing.payment_methods,
+      meeting_location: claimListing.meeting_location, meeting_start: claimListing.meeting_start, meeting_end: claimListing.meeting_end
+    });
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Confirming...';
+  const { data, error } = await supabase.rpc('claim_swipe_listing', { p_listing_id: claimListing.id, p_quantity: claimQty });
+  btn.disabled = false; btn.textContent = 'Confirm';
+  if(error){
+    console.error(error);
+    errEl.textContent = error.message || 'Could not claim this listing — try again.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const match = Array.isArray(data) ? data[0] : data;
+  showClaimSuccess({
+    counterpartEmail: claimListing.contact_email, quantity: match.quantity, price_per_swipe: match.price_per_swipe,
+    payment_methods: match.payment_methods,
+    meeting_location: match.meeting_location, meeting_start: match.meeting_start, meeting_end: match.meeting_end
+  });
+  await Promise.all([loadListings(), loadMatches(), refreshLogs()]);
+  renderListingGrid();
+}
+
+function showClaimSuccess(m){
+  document.getElementById('claimTitle').textContent = "You're connected!";
+  const total = (m.quantity * m.price_per_swipe).toFixed(2);
+  document.getElementById('claimSummary').innerHTML = `
+    ${m.quantity} swipe${m.quantity===1?'':'s'} at $${m.price_per_swipe.toFixed(2)}/swipe ($${total} total).<br>
+    <b>${escapeHtml(m.meeting_location)}</b> &middot; ${fmtMeetingWindow(m)}<br>
+    Pays via ${escapeHtml(fmtPaymentMethods(m.payment_methods))}<br>
+    Meet <b>${escapeHtml(m.counterpartEmail)}</b> there — this is also saved under the Matches tab.
+  `;
+  document.getElementById('claimCounterWrap').style.display = 'none';
+  document.getElementById('claimErr').style.display = 'none';
+  document.getElementById('claimCancel').style.display = 'none';
+  const confirmBtn = document.getElementById('claimConfirm');
+  confirmBtn.textContent = 'Close';
+  confirmBtn.disabled = false;
+  confirmBtn.onclick = ()=> claimOverlay.classList.remove('show');
+}
+
+const listingOverlay = document.getElementById('listingOverlay');
+function renderPaymentToggle(){
+  document.querySelectorAll('#listingPaymentMethods .paymentToggleBtn').forEach(btn=>{
+    btn.classList.toggle('selected', editingPaymentMethods.includes(btn.dataset.method));
+  });
+}
+document.getElementById('postListingBtn').onclick = ()=>{
+  editingListingType = 'sell';
+  document.getElementById('listingTypeSell').classList.add('selected');
+  document.getElementById('listingTypeBuy').classList.remove('selected');
+  document.getElementById('listingQuantity').value = '';
+  document.getElementById('listingPrice').value = '';
+  editingPaymentMethods = [];
+  renderPaymentToggle();
+  document.getElementById('listingLocation').value = '';
+  document.getElementById('listingMeetStart').value = '';
+  document.getElementById('listingMeetEnd').value = '';
+  document.getElementById('listingNote').value = '';
+  document.getElementById('listingContactPreview').textContent = currentUser ? currentUser.email : 'sign in to post';
+  document.getElementById('listingErr').style.display = 'none';
+  listingOverlay.classList.add('show');
+};
+document.getElementById('listingTypeSell').onclick = ()=>{
+  editingListingType = 'sell';
+  document.getElementById('listingTypeSell').classList.add('selected');
+  document.getElementById('listingTypeBuy').classList.remove('selected');
+};
+document.getElementById('listingTypeBuy').onclick = ()=>{
+  editingListingType = 'buy';
+  document.getElementById('listingTypeBuy').classList.add('selected');
+  document.getElementById('listingTypeSell').classList.remove('selected');
+};
+document.getElementById('listingPaymentMethods').onclick = (e)=>{
+  const btn = e.target.closest('.paymentToggleBtn');
+  if(!btn) return;
+  const method = btn.dataset.method;
+  editingPaymentMethods = editingPaymentMethods.includes(method)
+    ? editingPaymentMethods.filter(m=>m!==method)
+    : [...editingPaymentMethods, method];
+  renderPaymentToggle();
+};
+document.getElementById('listingCancel').onclick = ()=> listingOverlay.classList.remove('show');
+
+document.getElementById('listingSubmit').onclick = async ()=>{
+  const errEl = document.getElementById('listingErr');
+  const quantity = parseInt(document.getElementById('listingQuantity').value, 10);
+  const price = parseFloat(document.getElementById('listingPrice').value);
+  const location = document.getElementById('listingLocation').value.trim();
+  const meetStartRaw = document.getElementById('listingMeetStart').value;
+  const meetEndRaw = document.getElementById('listingMeetEnd').value;
+  const note = document.getElementById('listingNote').value.trim();
+  if(!Number.isInteger(quantity) || quantity <= 0 || isNaN(price) || price < 0){
+    errEl.textContent = 'Please enter a valid number of swipes and a price.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(editingPaymentMethods.length === 0){
+    errEl.textContent = 'Please select at least one payment method.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(!location){
+    errEl.textContent = 'Please enter where you\'ll meet to swipe — swipes can only change hands in person.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const meetStart = meetStartRaw ? new Date(meetStartRaw) : null;
+  const meetEnd = meetEndRaw ? new Date(meetEndRaw) : null;
+  if(!meetStart || !meetEnd || isNaN(meetStart.getTime()) || isNaN(meetEnd.getTime())){
+    errEl.textContent = 'Please enter when you\'ll meet (both a start and end time).';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(meetStart.getTime() < Date.now() - 60000){
+    errEl.textContent = 'The meeting window can\'t start in the past.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if(meetEnd.getTime() - meetStart.getTime() < 15*60000){
+    errEl.textContent = 'The meeting window needs to be at least 15 minutes long.';
+    errEl.style.display = 'block';
+    return;
+  }
+  const { error } = await supabase.from('swipe_listings').insert({
+    user_id: currentUser ? currentUser.id : null, type: editingListingType, quantity, price_per_swipe: price,
+    payment_methods: editingPaymentMethods,
+    meeting_location: location, meeting_start: meetStart.toISOString(), meeting_end: meetEnd.toISOString(),
+    note: note || null, contact_email: currentUser ? currentUser.email : null
+  });
+  if(error){
+    console.error(error);
+    errEl.textContent = 'Could not post your listing — try again.';
+    errEl.style.display = 'block';
+    return;
+  }
+  listingOverlay.classList.remove('show');
+  await loadListings();
+  renderListingGrid();
 };
 
 function startOfWeek(d){
@@ -1534,9 +2321,6 @@ function renderBreakdown(){
   drawPie(hallMeals, outMeals);
 }
 function statCard(val,lbl){ return `<div class="statCard"><div class="val">${val}</div><div class="lbl util">${lbl}</div></div>`; }
-function escapeHtml(str){
-  return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-}
 function fmtWeekLabel(ts){
   const d = new Date(ts);
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
