@@ -25,12 +25,16 @@ create policy "Users can delete their own logs"
   on public.meal_logs for delete
   using (auth.uid() = user_id);
 
+create policy "Users can update their own logs"
+  on public.meal_logs for update
+  using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
 -- RLS policies only restrict *which rows* a role can touch — Postgres also
 -- requires this separate, coarser grant before a role can query the table at
 -- all. Tables created via the SQL editor (as opposed to Supabase's Table
 -- Editor UI, which does this automatically) don't get it for free, so every
 -- table below needs one explicitly or every query 42501s regardless of RLS.
-grant select, insert, delete on public.meal_logs to authenticated;
+grant select, insert, update, delete on public.meal_logs to authenticated;
 
 -- Per-user dining plan (set on first login, editable afterward).
 -- semester_start/semester_type record which term the plan was saved for, so the

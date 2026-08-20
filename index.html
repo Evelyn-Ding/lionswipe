@@ -223,6 +223,8 @@
   .listingCard.agreement{border-color:var(--success);background:var(--success-bg);}
   .listingCard.agreementCancelled{opacity:.6;}
   .listingEmpty{text-align:center;color:var(--muted);font-size:13px;padding:34px 0;}
+  .mealHistoryList{max-height:420px;overflow-y:auto;margin-bottom:0;}
+  .mealHistoryList .listingCard{padding:12px 16px;}
   .tabBadge{display:inline-block;min-width:16px;height:16px;padding:0 4px;margin-left:5px;border-radius:8px;background:var(--danger);color:#fff;font-size:10px;font-weight:700;line-height:16px;text-align:center;vertical-align:2px;}
   .msgList{max-height:260px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;margin:10px 0;padding-right:2px;}
   .msgBubble{max-width:82%;padding:8px 12px;border-radius:14px;font-size:13px;line-height:1.4;word-wrap:break-word;}
@@ -387,6 +389,10 @@
         <div class="legend" id="pieLegend"></div>
       </div>
     </div>
+    <div class="chartBlock">
+      <h4>Meal History</h4>
+      <div class="listingGrid mealHistoryList" id="mealHistoryList"></div>
+    </div>
   </div>
 
   <!-- ================= SWIPE MARKET PAGE ================= -->
@@ -455,6 +461,20 @@
     <div class="row">
       <button class="btn solid" id="spendConfirm">Log Meal</button>
       <button class="btn" id="spendCancel">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="editLogOverlay">
+  <div class="modal">
+    <h3 id="editLogTitle">Edit Entry</h3>
+    <p class="util" style="font-size:13px;color:var(--muted);" id="editLogNameLabel">Where did you eat?</p>
+    <input class="authField" id="editLogName">
+    <p class="util" style="font-size:13px;color:var(--muted);" id="editLogValueLabel">Amount</p>
+    <input type="number" id="editLogValue" step="0.01">
+    <div class="row">
+      <button class="btn solid" id="editLogConfirm">Save</button>
+      <button class="btn" id="editLogCancel">Cancel</button>
     </div>
   </div>
 </div>
@@ -1035,6 +1055,38 @@ document.getElementById('spendConfirm').onclick = async ()=>{
   spendOverlay.classList.remove('show');
 };
 
+/* ---------------- Edit-log modal (Meal History, Breakdown page) ----------------
+   One shared modal for both entry types: label/field text swap based on
+   whether the row being edited is a dining-hall swipe or an eating-out spend,
+   but the row's type itself is never changed here — only its name and
+   swipes/amount. */
+let editLogId = null, editLogType = null;
+const editLogOverlay = document.getElementById('editLogOverlay');
+function openEditLogModal(log){
+  editLogId = log.id;
+  editLogType = log.type;
+  document.getElementById('editLogTitle').textContent = log.type==='hall' ? 'Edit Dining Hall Visit' : 'Edit Meal';
+  document.getElementById('editLogNameLabel').textContent = log.type==='hall' ? 'Dining hall' : 'Where did you eat?';
+  document.getElementById('editLogName').value = log.name || '';
+  document.getElementById('editLogValueLabel').textContent = log.type==='hall' ? 'Swipes used' : 'Amount spent';
+  const valueInput = document.getElementById('editLogValue');
+  valueInput.step = log.type==='hall' ? '1' : '0.01';
+  valueInput.value = log.type==='hall' ? log.swipes : log.amount;
+  editLogOverlay.classList.add('show');
+}
+document.getElementById('editLogCancel').onclick = ()=> editLogOverlay.classList.remove('show');
+document.getElementById('editLogConfirm').onclick = async ()=>{
+  const name = document.getElementById('editLogName').value.trim();
+  const val = parseFloat(document.getElementById('editLogValue').value);
+  if(!name || isNaN(val) || val<0) return;
+  const patch = editLogType==='hall'
+    ? { name, swipes: Math.round(val), amount: null }
+    : { name, swipes: null, amount: val };
+  await updateLog(editLogId, patch);
+  editLogOverlay.classList.remove('show');
+  renderBreakdown();
+};
+
 /* ---------------- Guest (logged-out) local storage ----------------
    Not signed in yet? Everything below still works — swipes/spend logs, the
    dining plan, and the spending goal are all kept in this browser's
@@ -1066,7 +1118,7 @@ async function insertLog(entry){
                    swipes: entry.swipes || null, amount: entry.amount || null };
   if(!currentUser){
     const guestLogs = loadGuestLogs();
-    guestLogs.push(clean);
+    guestLogs.push({ ...clean, id: crypto.randomUUID() });
     saveGuestLogs(guestLogs);
     logs = guestLogs;
     updateSwipesSummary();
@@ -1080,12 +1132,50 @@ async function insertLog(entry){
   await refreshLogs();
 }
 async function refreshLogs(){
-  if(!currentUser){ logs = loadGuestLogs(); updateSwipesSummary(); return; }
+  if(!currentUser){
+    logs = loadGuestLogs();
+    // Backfill ids for guest entries saved before edit/delete existed, so
+    // Meal History can address every row consistently by id.
+    let backfilled = false;
+    logs.forEach(l=>{ if(!l.id){ l.id = crypto.randomUUID(); backfilled = true; } });
+    if(backfilled) saveGuestLogs(logs);
+    updateSwipesSummary();
+    return;
+  }
   if(!supabase){ logs = []; updateSwipesSummary(); return; }
   const { data, error } = await supabase.from('meal_logs').select('*').eq('user_id', currentUser.id).order('ts', {ascending:true});
   if(error){ console.error(error); return; }
-  logs = (data||[]).map(r=>({ ts: new Date(r.ts).getTime(), type:r.type, name:r.name, swipes:r.swipes, amount:r.amount }));
+  logs = (data||[]).map(r=>({ id:r.id, ts: new Date(r.ts).getTime(), type:r.type, name:r.name, swipes:r.swipes, amount:r.amount }));
   updateSwipesSummary();
+}
+async function updateLog(id, patch){
+  if(!currentUser){
+    const guestLogs = loadGuestLogs();
+    const idx = guestLogs.findIndex(l=>l.id===id);
+    if(idx===-1) return;
+    guestLogs[idx] = { ...guestLogs[idx], ...patch };
+    saveGuestLogs(guestLogs);
+    logs = guestLogs;
+    updateSwipesSummary();
+    return;
+  }
+  if(!supabase) return;
+  const { error } = await supabase.from('meal_logs').update(patch).eq('id', id);
+  if(error){ console.error(error); alert('Could not update that entry — try again.'); return; }
+  await refreshLogs();
+}
+async function deleteLog(id){
+  if(!currentUser){
+    const guestLogs = loadGuestLogs().filter(l=>l.id!==id);
+    saveGuestLogs(guestLogs);
+    logs = guestLogs;
+    updateSwipesSummary();
+    return;
+  }
+  if(!supabase) return;
+  const { error } = await supabase.from('meal_logs').delete().eq('id', id);
+  if(error){ console.error(error); alert('Could not delete that entry — try again.'); return; }
+  await refreshLogs();
 }
 
 async function loadOrPromptPlan(){
@@ -2442,7 +2532,46 @@ function renderBreakdown(){
   const hallMeals = logs.filter(l=>l.type==='hall').reduce((s,l)=>s+l.swipes,0);
   const outMeals = logs.filter(l=>l.type==='out').length;
   drawPie(hallMeals, outMeals);
+  renderMealHistory();
 }
+function renderMealHistory(){
+  const container = document.getElementById('mealHistoryList');
+  if(!logs.length){
+    container.innerHTML = `<div class="listingEmpty">No meals logged yet.</div>`;
+    return;
+  }
+  const sorted = [...logs].sort((a,b)=>b.ts-a.ts);
+  container.innerHTML = sorted.map(l=>{
+    const dateLabel = new Date(l.ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+    const isHall = l.type==='hall';
+    const priceLabel = isHall ? `${l.swipes}<small>swipe${l.swipes===1?'':'s'}</small>` : `$${(l.amount||0).toFixed(2)}<small>spent</small>`;
+    const typeLabel = isHall ? 'Dining Hall' : 'Eating Out';
+    return `<div class="listingCard">
+      <div class="lPrice">${priceLabel}</div>
+      <div class="lInfo">
+        <div class="lQty">${escapeHtml(l.name||'')}</div>
+        <div class="lMeta">${typeLabel} &middot; ${dateLabel}</div>
+      </div>
+      <div class="lActions">
+        <button class="btn util" data-action="edit-log" data-id="${l.id}" style="font-size:11px;padding:5px 10px;">Edit</button>
+        <button class="btn danger util" data-action="delete-log" data-id="${l.id}" style="font-size:11px;padding:5px 10px;">Delete</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+document.getElementById('mealHistoryList').onclick = async (e)=>{
+  const btn = e.target.closest('button[data-action]');
+  if(!btn) return;
+  const log = logs.find(l=>l.id===btn.dataset.id);
+  if(!log) return;
+  if(btn.dataset.action === 'delete-log'){
+    if(!confirm('Delete this entry?')) return;
+    await deleteLog(log.id);
+    renderBreakdown();
+    return;
+  }
+  if(btn.dataset.action === 'edit-log') openEditLogModal(log);
+};
 function statCard(val,lbl){ return `<div class="statCard"><div class="val">${val}</div><div class="lbl util">${lbl}</div></div>`; }
 function escapeHtml(str){
   return String(str).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
