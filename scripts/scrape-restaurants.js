@@ -29,7 +29,25 @@ const CANDIDATES = [
   'Tartina',
   'Doaba Deli',
   'JinRamen',
-  'Nussbaum & Wu'
+  'Nussbaum & Wu',
+  'Massawa Ethiopian Restaurant',
+  'V&T Pizzeria',
+  "Amir's Grill",
+  'Kitchenette',
+  'Max Soha',
+  "Mel's Burger Bar",
+  'Sweetgreen Columbia',
+  'Toast',
+  'The Heights Bar & Grill',
+  'Pisticci',
+  'Flat Top',
+  'Chipotle Mexican Grill 116th Street',
+  'Spice Symphony',
+  "Ollie's Sichuan",
+  'Sal & Carmine Pizza',
+  "Nikko's Sushi",
+  'Chaiwali',
+  "Milano Market"
 ];
 
 const MODEL = 'claude-sonnet-5';
