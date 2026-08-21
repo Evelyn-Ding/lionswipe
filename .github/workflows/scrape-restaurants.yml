@@ -1,0 +1,25 @@
+name: Scrape curated restaurants
+
+on:
+  schedule:
+    # Weekly, Monday 9:00 UTC (~4-5am America/New_York) — restaurant menu prices
+    # move far less often than daily dining hall menus (see scrape-menus.yml),
+    # and api/chat.js already treats entries over 14 days old as stale, so
+    # weekly keeps them fresh without burning Anthropic web_search calls daily.
+    - cron: "0 9 * * 1"
+  workflow_dispatch: {} # lets you trigger a run manually from the Actions tab
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm install
+      - run: node scripts/scrape-restaurants.js
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

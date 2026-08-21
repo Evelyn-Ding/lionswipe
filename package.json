@@ -6,7 +6,8 @@
   "scripts": {
     "dev:local": "node scripts/dev-server.js",
     "scrape:menus": "node scripts/scrape-menus.js",
-    "scrape:menus:headed": "HEADLESS=false node scripts/scrape-menus.js"
+    "scrape:menus:headed": "HEADLESS=false node scripts/scrape-menus.js",
+    "scrape:restaurants": "node scripts/scrape-restaurants.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.45.0"

@@ -181,6 +181,39 @@ grant select on public.daily_menus to anon, authenticated;
 -- No insert/update/delete policy for anon/authenticated — only the service role
 -- (used by scripts/scrape-menus.js, never exposed to the browser) can write here.
 
+-- Curated off-campus restaurant pool for Roarie (see scripts/scrape-restaurants.js
+-- and api/chat.js). Roarie's live web_search verification per chat turn (real
+-- address + real current menu prices, never guessed) is accurate but slow — this
+-- table holds the same standard of verified data for a fixed pool of popular
+-- Morningside Heights restaurants, refreshed on a schedule instead of once per
+-- message, so api/chat.js can usually answer from a fast DB read and only fall
+-- back to live search for restaurants outside the pool. `menu_items` is
+-- [{item, price}], matching the shape Roarie's JSON reply already uses. Written
+-- only by the scraper (service role key, bypasses RLS) — anon/authenticated
+-- users can only read.
+create table if not exists public.curated_restaurants (
+  id text primary key,
+  name text not null,
+  address text,
+  cuisine text,
+  walk_minutes int,
+  menu_items jsonb not null default '[]'::jsonb,
+  note text,
+  active boolean not null default true,
+  verified_at timestamptz
+);
+
+alter table public.curated_restaurants enable row level security;
+
+create policy "Anyone can read curated restaurants"
+  on public.curated_restaurants for select
+  using (true);
+
+grant select on public.curated_restaurants to anon, authenticated;
+
+-- No insert/update/delete policy for anon/authenticated — only the service role
+-- (used by scripts/scrape-restaurants.js, never exposed to the browser) can write here.
+
 -- Swipe Market (see the "Swipe Market" page in index.html, modeled loosely on
 -- swipemarketcu.com). Signed-in students post "selling N swipes" or "buying N
 -- swipes" listings with a price; other students browse and claim them (see

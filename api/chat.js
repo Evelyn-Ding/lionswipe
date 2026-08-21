@@ -29,6 +29,44 @@ function pruneRecent() {
   }
 }
 
+// Pool of off-campus restaurants scripts/scrape-restaurants.js has already
+// verified (real address + real current menu prices, same standard Roarie's own
+// system prompt enforces) and written to Supabase on a schedule. Reading this
+// lets Roarie usually skip web_search entirely — that's the actual slow part of
+// a reply, since it runs before any text streams — and fall back to a live
+// search only for restaurants outside the pool. Best-effort: if Supabase isn't
+// configured, the table is empty, or the request fails, this just returns an
+// empty list and Roarie behaves exactly as before (live search every time).
+const STALE_AFTER_MS = 14 * 24 * 60 * 60 * 1000; // 14 days
+async function getCuratedRestaurants() {
+  const url = process.env.SUPABASE_URL;
+  const key = process.env.SUPABASE_ANON_KEY;
+  if (!url || !key) return [];
+  try {
+    const resp = await fetch(
+      `${url}/rest/v1/curated_restaurants?active=eq.true&select=name,address,cuisine,walk_minutes,menu_items,note,verified_at`,
+      { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+    );
+    if (!resp.ok) return [];
+    const rows = await resp.json();
+    return Array.isArray(rows) ? rows : [];
+  } catch {
+    return [];
+  }
+}
+
+function curatedRestaurantsBlock(rows) {
+  if (!rows.length) return '';
+  const now = Date.now();
+  const lines = rows.map(r => {
+    const stale = r.verified_at && (now - new Date(r.verified_at).getTime()) > STALE_AFTER_MS;
+    const items = (r.menu_items || []).map(mi => `${mi.item} ${mi.price}`).join(', ');
+    return `- ${r.name}${r.cuisine ? ` (${r.cuisine})` : ''} — ${r.address || 'address unknown'}, ~${r.walk_minutes ?? '?'} min walk. ${r.note || ''} Menu: ${items || 'none verified'}.${stale ? ' [verified over 2 weeks ago — re-check with web_search if the student needs current prices]' : ''}`;
+  }).join('\n');
+  return `\n\nYou already have verified info (real address + real current menu prices, checked recently) for these nearby restaurants — prefer using this directly over web_search when one of them fits what the student wants, unless it's marked stale above:
+${lines}\n`;
+}
+
 function sseStreamFromText(text) {
   const encoder = new TextEncoder();
   return new ReadableStream({
@@ -62,18 +100,6 @@ export default async function handler(req) {
     ? `Current filters the student has selected (apply these to any new recommendations): ${filters.join(', ')}.`
     : 'No filters currently selected.';
 
-  const system = `You are Roarie, LionSwipe's food-recommendation chatbot, modeled after Columbia University's lion mascot Roar-ee. You're a warm, upbeat, encouraging campus food guide helping a student near 116th St & Broadway (Morningside Heights / Harlem, NYC) figure out what to eat. Keep a friendly voice with the occasional light lion/campus touch, but stay concise and genuinely useful — don't let personality get in the way of being fast and helpful.
-
-${filterText}
-
-When the student's message calls for new or refined restaurant suggestions, use the web_search tool to find 3-4 REAL nearby restaurants that fit what they're asking for. Search each candidate's actual current menu (official site, Google Maps listing, Yelp, or a delivery app page) and use only prices you actually find there — never guess, estimate, or recall a price from memory. If you can't verify a price for an item, leave that item out. Include each restaurant's real street address and an approximate walk time from Columbia.
-
-If the student's message is just conversation, a clarifying question, or doesn't call for new suggestions (e.g. "what's the walk on that one?" about a place you already mentioned), don't search again — just reply, and leave recommendations empty.
-
-Respond with ONLY raw JSON, no markdown fences and no commentary outside the JSON, in this exact shape:
-{"reply": "a short 1-3 sentence conversational reply in your voice", "recommendations": [{"name":"...", "address":"...", "walk":"N min walk", "note":"one short sentence", "menu_items":[{"item":"...", "price":"$X"}]}]}
-"recommendations" must be an empty array when this turn has no new suggestions.`;
-
   pruneRecent();
   const cacheKey = JSON.stringify({ m: trimmed, f: filterText });
   const cached = RECENT_RESPONSES.get(cacheKey);
@@ -82,6 +108,25 @@ Respond with ONLY raw JSON, no markdown fences and no commentary outside the JSO
       headers: { 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' }
     });
   }
+
+  const curated = await getCuratedRestaurants();
+
+  const system = `You are Roarie, LionSwipe's food-recommendation chatbot, modeled after Columbia University's lion mascot Roar-ee. You're a warm, upbeat, encouraging campus food guide helping a student near 116th St & Broadway (Morningside Heights / Harlem, NYC) figure out what to eat. Keep a friendly voice with the occasional light lion/campus touch, but stay concise and genuinely useful — don't let personality get in the way of being fast and helpful.
+
+${filterText}
+${curatedRestaurantsBlock(curated)}
+When the student's message calls for new or refined restaurant suggestions, pick exactly 3 REAL nearby restaurants that fit what they're asking for. Speed matters, so be efficient:
+- Prefer restaurants from the verified list above when one fits — use its info directly, no search needed.
+- Only use the web_search tool for restaurants not in that list (or ones marked stale). Use at most ONE search per restaurant you do need to look up — search for something like "<restaurant name> menu prices Morningside Heights NYC", since a single Google Maps, Yelp, or delivery-app listing usually shows the address AND current menu prices together.
+- Never use more than 4 searches total for one reply.
+- If a restaurant was already verified earlier in this conversation, reuse what you found instead of searching it again.
+- Use only prices you actually find in search results (or in the verified list above) — never guess, estimate, or recall a price from memory. If you can't verify a price for an item, leave that item out. Include each restaurant's real street address and an approximate walk time from Columbia.
+
+If the student's message is just conversation, a clarifying question, or doesn't call for new suggestions (e.g. "what's the walk on that one?" about a place you already mentioned), don't search again — just reply, and leave recommendations empty.
+
+Respond with ONLY raw JSON, no markdown fences and no commentary outside the JSON, in this exact shape:
+{"reply": "a short 1-3 sentence conversational reply in your voice", "recommendations": [{"name":"...", "address":"...", "walk":"N min walk", "note":"one short sentence", "menu_items":[{"item":"...", "price":"$X"}]}]}
+"recommendations" must be an empty array when this turn has no new suggestions.`;
 
   // Mark the end of the existing history as a cache breakpoint: Anthropic caches
   // everything up to and including this block, so as the conversation grows each new
@@ -107,7 +152,7 @@ Respond with ONLY raw JSON, no markdown fences and no commentary outside the JSO
         max_tokens: 4000,
         system,
         tools: [
-          { type: 'web_search_20260209', name: 'web_search', max_uses: 8 }
+          { type: 'web_search_20260209', name: 'web_search', max_uses: 4 }
         ],
         messages: anthropicMessages,
         stream: true
@@ -136,6 +181,11 @@ Respond with ONLY raw JSON, no markdown fences and no commentary outside the JSO
     async start(controller) {
       const reader = anthropicResp.body.getReader();
       let buf = '';
+      // Tracks in-progress server_tool_use (web_search) blocks by index so we can
+      // surface "checking <query>..." status while the model is searching — that
+      // phase runs before any reply text streams, so without this the loading
+      // message just sits frozen for however long the searches take.
+      const pendingSearches = new Map(); // index -> accumulated partial_json string
       try {
         while (true) {
           const { done, value } = await reader.read();
@@ -156,6 +206,18 @@ Respond with ONLY raw JSON, no markdown fences and no commentary outside the JSO
             if (evt.type === 'content_block_delta' && evt.delta?.type === 'text_delta') {
               fullText += evt.delta.text;
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: evt.delta.text })}\n\n`));
+            } else if (evt.type === 'content_block_start' && evt.content_block?.type === 'server_tool_use' && evt.content_block?.name === 'web_search') {
+              pendingSearches.set(evt.index, '');
+            } else if (evt.type === 'content_block_delta' && evt.delta?.type === 'input_json_delta' && pendingSearches.has(evt.index)) {
+              pendingSearches.set(evt.index, pendingSearches.get(evt.index) + (evt.delta.partial_json || ''));
+            } else if (evt.type === 'content_block_stop' && pendingSearches.has(evt.index)) {
+              const raw = pendingSearches.get(evt.index);
+              pendingSearches.delete(evt.index);
+              let query = null;
+              try { query = JSON.parse(raw).query; } catch { /* incomplete/malformed, skip */ }
+              if (query) {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ status: `Checking "${query}"...` })}\n\n`));
+              }
             } else if (evt.type === 'error') {
               controller.enqueue(encoder.encode(`data: ${JSON.stringify({ error: evt.error?.message || 'stream error' })}\n\n`));
             }

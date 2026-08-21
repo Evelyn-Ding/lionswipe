@@ -991,6 +991,7 @@ async function sendRoarieMessage(){
         let evt;
         try{ evt = JSON.parse(line.slice(6)); }catch(e){ continue; }
         if(evt.error){ sawError = evt.error; continue; }
+        if(evt.status){ loadingMsg.textContent = evt.status; continue; }
         if(evt.text){
           raw += evt.text;
           const partial = extractPartialReply(raw);

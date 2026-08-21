@@ -75,3 +75,20 @@ Roarie" on top, "Enter Your Own Meal" below.
   generated.
 - Identical back-to-back requests (e.g. a double-tapped send) are served from a
   short-lived (20s) in-memory cache in `api/chat.js` instead of re-hitting Claude.
+- The live `web_search` phase (up to several real searches to verify restaurant
+  addresses/menu prices) runs before any reply text can stream, so it's the actual
+  source of chat latency — streaming alone doesn't fix it. Two mitigations:
+  - `scripts/scrape-restaurants.js` verifies a fixed pool of popular
+    Morningside Heights restaurants (same "real address + real current menu
+    price, never guessed" standard as live chat) on a schedule, outside Vercel,
+    and upserts into the Supabase `curated_restaurants` table. `api/chat.js`
+    reads this pool and injects it into Roarie's system prompt so it can usually
+    answer from that cached data instead of searching live; it only falls back
+    to `web_search` for restaurants outside the pool (or entries flagged stale,
+    >14 days since verification).
+  - The search budget itself is capped (`max_uses: 4`, 3 recommendations instead
+    of 3-4) and the prompt pushes the model toward one combined search per
+    restaurant instead of separate identification/price-verification searches.
+    `api/chat.js` also forwards each `web_search` query as a `status` SSE event
+    so the loading message shows live progress instead of sitting frozen during
+    the search phase.
