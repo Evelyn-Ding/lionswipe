@@ -107,6 +107,24 @@ async function upsertToSupabase(rows) {
   }
 }
 
+// Verifies several restaurants at once instead of one-at-a-time — each is an
+// independent Anthropic call, so there's no reason to serialize them. Keeps
+// a modest concurrency cap rather than firing all of CANDIDATES at once, to
+// stay well clear of per-minute rate limits.
+const CONCURRENCY = 8;
+async function mapWithConcurrency(items, limit, fn) {
+  const results = new Array(items.length);
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const i = next++;
+      results[i] = await fn(items[i]);
+    }
+  }
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+}
+
 async function main() {
   if (!process.env.ANTHROPIC_API_KEY) {
     console.error('ANTHROPIC_API_KEY not set — cannot verify restaurants.');
@@ -115,13 +133,13 @@ async function main() {
   }
 
   const rows = [];
-  for (const name of CANDIDATES) {
+  await mapWithConcurrency(CANDIDATES, CONCURRENCY, async (name) => {
     console.log(`Verifying "${name}"...`);
     try {
       const info = await verifyRestaurant(name);
       if (!info.found) {
-        console.log(`  -> not found/verifiable, skipping.`);
-        continue;
+        console.log(`  -> "${name}" not found/verifiable, skipping.`);
+        return;
       }
       const row = {
         id: slugify(name),
@@ -134,12 +152,12 @@ async function main() {
         active: true,
         verified_at: new Date().toISOString()
       };
-      console.log(`  -> ${row.menu_items.length} menu item(s) verified.`);
+      console.log(`  -> "${name}": ${row.menu_items.length} menu item(s) verified.`);
       rows.push(row);
     } catch (err) {
-      console.error(`  -> failed: ${err.message}`);
+      console.error(`  -> "${name}" failed: ${err.message}`);
     }
-  }
+  });
 
   if (rows.length === 0) {
     console.log('\nNothing verified — nothing to write.');
